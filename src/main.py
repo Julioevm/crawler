@@ -8,6 +8,7 @@ import sys
 import math
 from pygame.locals import *
 from engine.raycaster import Raycaster
+from engine.texture_manager import TextureManager
 from entities.player import Player
 from entities.enemy import Enemy
 from entities.potion import Potion
@@ -29,17 +30,21 @@ def main():
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Crawler - First-Person Dungeon Crawler")
     
-    # Define a simple map (0 = empty space, 1-3 = different wall types)
+    # Define a simple map (0 = empty space, 1 = wall)
     map_data = [
         [1, 1, 1, 1, 1, 1, 1, 1],
         [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 2, 0, 0, 3, 0, 1],
+        [1, 0, 1, 0, 0, 1, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 3, 0, 0, 2, 0, 1],
+        [1, 0, 1, 0, 0, 1, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 1, 1, 1, 1]
     ]
+    
+    # Create the texture manager
+    texture_manager = TextureManager()
+    texture_manager.create_default_textures()
     
     # Create the game map
     game_map = GameMap(len(map_data[0]), len(map_data))
@@ -66,7 +71,7 @@ def main():
     game_map.add_entity(enemy2)
     
     # Create the raycaster
-    raycaster = Raycaster(screen_width, screen_height, map_data)
+    raycaster = Raycaster(screen_width, screen_height, map_data, texture_manager)
     raycaster.set_player_position(player.x, player.y)
     raycaster.set_player_angle(player.angle)
     

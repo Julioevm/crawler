@@ -26,11 +26,15 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [x] Fix player turning to properly rotate the camera view
 - [x] Fix player movement to align with camera direction
 - [x] Add compass to UI to show player facing direction
+- [x] Add texture mapping for walls
+- [x] Create organized assets directory structure
+- [x] Add placeholder texture files for walls
+- [x] Use unified dungeon wall texture for all walls
+- [x] Implement proper texture coordinate calculation
 
 ## Core Engine Features
 - [ ] Implement proper collision detection with walls
 - [ ] Add ceiling rendering
-- [ ] Add texture mapping for walls
 - [ ] Implement sprite rendering for enemies/items
 - [ ] Add lighting and shading effects
 - [ ] Optimize raycasting performance
