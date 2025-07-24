@@ -1,0 +1,39 @@
+"""
+Basic UI system for displaying game information.
+"""
+
+import pygame
+
+class UI:
+    """Basic UI system for the game."""
+    
+    def __init__(self, screen_width, screen_height):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.font = pygame.font.Font(None, 36)
+        
+    def draw_player_stats(self, screen, player):
+        """Draw player stats on the screen."""
+        # Create a semi-transparent background for the stats
+        stats_surface = pygame.Surface((200, 100))
+        stats_surface.set_alpha(128)
+        stats_surface.fill((0, 0, 0))
+        screen.blit(stats_surface, (10, 10))
+        
+        # Draw player stats
+        hp_text = self.font.render(f"HP: {player.hp}/{player.max_hp}", True, (255, 255, 255))
+        mp_text = self.font.render(f"MP: {player.mp}/{player.max_mp}", True, (255, 255, 255))
+        level_text = self.font.render(f"Level: {player.level}", True, (255, 255, 255))
+        
+        screen.blit(hp_text, (20, 20))
+        screen.blit(mp_text, (20, 50))
+        screen.blit(level_text, (20, 80))
+        
+    def draw_messages(self, screen, messages):
+        """Draw game messages on the screen."""
+        # Draw messages in the bottom-left corner
+        y_offset = self.screen_height - 40
+        for message in reversed(messages[-5:]):  # Show last 5 messages
+            text = self.font.render(message, True, (255, 255, 255))
+            screen.blit(text, (10, y_offset))
+            y_offset -= 30
