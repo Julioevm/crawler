@@ -22,6 +22,9 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [x] Create combat UI for player interactions
 - [x] Add combat mechanics (attack, flee)
 - [x] Implement damage calculation and XP gain
+- [x] Implement intuitive control scheme (WASD/Arrow keys)
+- [x] Fix player turning to properly rotate the camera view
+- [x] Fix player movement to align with camera direction
 
 ## Core Engine Features
 - [ ] Implement proper collision detection with walls
@@ -71,6 +74,7 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [ ] Implement difficulty settings
 
 ## Future Enhancements
+- [ ] Add multiplayer support
 - [ ] Create map editor
 - [ ] Add modding support
 - [ ] Implement procedural dungeon generation

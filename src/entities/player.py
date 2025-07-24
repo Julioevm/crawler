@@ -3,6 +3,7 @@ Player character class.
 """
 
 from entities.entity import Entity
+import math
 
 class Player(Entity):
     """Player character entity."""
@@ -21,6 +22,8 @@ class Player(Entity):
         self.inventory = []
         self.equipped_weapon = None
         self.facing = 0  # 0=north, 1=east, 2=south, 3=west
+        # Angle in radians corresponding to facing direction
+        self.angle = 0.0  # 0 = north, π/2 = east, π = south, 3π/2 = west
         
     def take_damage(self, amount):
         """Reduce player HP by amount."""
@@ -81,10 +84,14 @@ class Player(Entity):
     def turn_left(self):
         """Turn the player 90 degrees counter-clockwise."""
         self.facing = (self.facing - 1) % 4
+        # Update angle in radians
+        self.angle = self.facing * (math.pi / 2)
         
     def turn_right(self):
         """Turn the player 90 degrees clockwise."""
         self.facing = (self.facing + 1) % 4
+        # Update angle in radians
+        self.angle = self.facing * (math.pi / 2)
         
     def get_facing_vector(self):
         """Get the movement vector based on the player's facing direction."""

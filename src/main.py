@@ -68,6 +68,7 @@ def main():
     # Create the raycaster
     raycaster = Raycaster(screen_width, screen_height, map_data)
     raycaster.set_player_position(player.x, player.y)
+    raycaster.set_player_angle(player.angle)
     
     # Create the managers
     turn_manager = TurnManager(game_map)
@@ -79,7 +80,11 @@ def main():
     combat_ui = CombatUI(screen_width, screen_height)
     
     # Game messages
-    messages = ["Welcome to Crawler!", "Use WASD to move, arrow keys to turn", "Press 'E' to open inventory"]
+    messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory"]
+    
+    # Movement speeds
+    move_speed = 1.0  # Grid-based movement (1 tile per action)
+    rot_speed = math.pi / 2  # 90 degrees per turn
     
     # Set up the clock for controlling frame rate
     clock = pygame.time.Clock()
@@ -115,54 +120,79 @@ def main():
                         messages.append(inventory_result)
                 elif event.key == K_ESCAPE:
                     running = False
-                elif event.key == K_e and not combat_manager.in_combat:
+                elif event.key == K_i and not combat_manager.in_combat:
                     # Toggle inventory visibility
                     inventory_ui.toggle_visibility()
-                elif turn_manager.player_turn and waiting_for_input and not inventory_ui.visible:
-                    # Handle player movement
+                elif turn_manager.player_turn and waiting_for_input and not inventory_ui.visible and not combat_manager.in_combat:
+                    # Handle player movement and actions
                     moved = False
                     dx, dy = 0, 0
                     
+                    # WASD movement - based on player's current angle
                     if event.key == K_w:  # Move forward
-                        dx, dy = player.get_facing_vector()
+                        # Move in the direction the player is facing
+                        dx = math.cos(player.angle)
+                        dy = math.sin(player.angle)
+                        messages.append("You move forward")
                     elif event.key == K_s:  # Move backward
-                        dx, dy = -player.get_facing_vector()[0], -player.get_facing_vector()[1]
+                        # Move opposite to the direction the player is facing
+                        dx = -math.cos(player.angle)
+                        dy = -math.sin(player.angle)
+                        messages.append("You move backward")
                     elif event.key == K_a:  # Strafe left
                         # Strafe left relative to facing direction
-                        facing = player.facing
-                        if facing == 0:  # North
-                            dx, dy = -1, 0
-                        elif facing == 1:  # East
-                            dx, dy = 0, -1
-                        elif facing == 2:  # South
-                            dx, dy = 1, 0
-                        elif facing == 3:  # West
-                            dx, dy = 0, -1
+                        dx = math.cos(player.angle - math.pi/2)
+                        dy = math.sin(player.angle - math.pi/2)
+                        messages.append("You strafe left")
                     elif event.key == K_d:  # Strafe right
                         # Strafe right relative to facing direction
-                        facing = player.facing
-                        if facing == 0:  # North
-                            dx, dy = 1, 0
-                        elif facing == 1:  # East
-                            dx, dy = 0, 1
-                        elif facing == 2:  # South
-                            dx, dy = -1, 0
-                        elif facing == 3:  # West
-                            dx, dy = 0, -1
+                        dx = math.cos(player.angle + math.pi/2)
+                        dy = math.sin(player.angle + math.pi/2)
+                        messages.append("You strafe right")
+                    elif event.key == K_q:  # Turn left
+                        player.turn_left()
+                        moved = True
+                        messages.append("You turn left")
+                    elif event.key == K_e:  # Turn right
+                        player.turn_right()
+                        moved = True
+                        messages.append("You turn right")
+                    
+                    # Arrow key movement - based on player's current angle
+                    if event.key == K_UP:  # Move forward
+                        # Move in the direction the player is facing
+                        dx = math.cos(player.angle)
+                        dy = math.sin(player.angle)
+                        messages.append("You move forward")
+                    elif event.key == K_DOWN:  # Move backward
+                        # Move opposite to the direction the player is facing
+                        dx = -math.cos(player.angle)
+                        dy = -math.sin(player.angle)
+                        messages.append("You move backward")
                     elif event.key == K_LEFT:  # Turn left
                         player.turn_left()
                         moved = True
+                        messages.append("You turn left")
                     elif event.key == K_RIGHT:  # Turn right
                         player.turn_right()
                         moved = True
+                        messages.append("You turn right")
                     
-                    # If trying to move, check if it's valid
-                    if (dx != 0 or dy != 0) and game_map.move_entity(player, dx, dy):
-                        moved = True
-                        messages.append(f"Moved to ({int(player.x)}, {int(player.y)})")
+                    # If trying to move, check if it's valid (convert continuous movement to grid-based)
+                    if (dx != 0 or dy != 0):
+                        # Convert continuous movement to grid-based by rounding
+                        target_x = int(player.x + round(dx))
+                        target_y = int(player.y + round(dy))
+                        
+                        # Check if the target position is valid
+                        if game_map.is_walkable(target_x, target_y):
+                            player.x = target_x
+                            player.y = target_y
+                            moved = True
+                            messages.append(f"Moved to ({player.x}, {player.y})")
                         
                         # Check for enemy encounters
-                        entities_at_position = game_map.get_entities_at(int(player.x), int(player.y))
+                        entities_at_position = game_map.get_entities_at(player.x, player.y)
                         for entity in entities_at_position:
                             if isinstance(entity, Enemy) and entity.is_alive():
                                 # Start combat
@@ -174,6 +204,7 @@ def main():
                     # If player made a move/action, end their turn
                     if moved and not combat_manager.in_combat:
                         raycaster.set_player_position(player.x, player.y)
+                        raycaster.set_player_angle(player.angle)
                         turn_manager.end_player_turn()
                         waiting_for_input = True
         
