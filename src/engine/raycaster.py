@@ -20,9 +20,9 @@ class Raycaster:
         self.player_y = 1.5
         self.player_angle = 0
         
-        # Rendering properties
-        self.fov = math.pi / 3  # 60 degrees field of view
-        self.wall_height = 64
+        # Rendering properties - adjusted to make cells feel smaller and more claustrophobic
+        self.fov = math.pi / 6  # 30 degrees field of view (even narrower)
+        self.wall_height = 256  # Much taller walls
         self.wall_colors = {
             1: (100, 100, 110),  # Dungeon wall color
         }
@@ -57,13 +57,13 @@ class Raycaster:
             ray_angle = ray_angle % (2 * math.pi)
             
             # Cast the ray
-            distance, wall_type, hit_x, hit_y = self.cast_single_ray(ray_angle)
+            distance, wall_type, hit_x, hit_y, side = self.cast_single_ray(ray_angle)
             
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
             
-            # Calculate wall height
-            wall_height = (self.wall_height / distance) if distance > 0 else self.screen_height
+            # Calculate wall height - with a minimum height to avoid division by zero
+            wall_height = max(1, (self.wall_height / distance)) if distance > 0 else self.screen_height
             
             # Use dungeon wall texture for all walls
             texture = self.texture_manager.get_texture("dungeon_wall")
@@ -74,15 +74,13 @@ class Raycaster:
                 wall_top = (self.screen_height - wall_height) // 2
                 wall_bottom = wall_top + wall_height
                 
-                # Calculate texture coordinate
-                # Get the exact position where the ray hit the wall
-                wall_x = hit_x if hit_x is not None else 0
-                wall_y = hit_y if hit_y is not None else 0
-                
-                # Calculate texture coordinate (0-1) across the wall
-                tex_coord = wall_x - math.floor(wall_x) if (wall_x - math.floor(wall_x)) != 0 else 1
-                if hit_x is None:  # If hit_y was used instead
-                    tex_coord = wall_y - math.floor(wall_y) if (wall_y - math.floor(wall_y)) != 0 else 1
+                # Calculate texture coordinate based on which side was hit
+                # side = 0 means x-side (east/west wall faces)
+                # side = 1 means y-side (north/south wall faces)
+                if side == 0:  # Hit east/west wall face (use Y coordinate for texture)
+                    tex_coord = hit_y - math.floor(hit_y) if hit_y is not None else 0
+                else:  # Hit north/south wall face (use X coordinate for texture)
+                    tex_coord = hit_x - math.floor(hit_x) if hit_x is not None else 0
                     
                 # Map to texture pixel coordinate
                 tex_x = int(tex_coord * (self.tex_width - 1))
@@ -106,8 +104,9 @@ class Raycaster:
                 # Draw empty space (don't draw anything)
                 pass
         
-        # Draw a simple floor
-        pygame.draw.rect(screen, (50, 50, 50), (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
+        # Draw a simple floor with a gradient to enhance depth perception
+        floor_color = (50, 50, 50)
+        pygame.draw.rect(screen, floor_color, (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
     
     def cast_single_ray(self, ray_angle):
         """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
@@ -173,4 +172,4 @@ class Raycaster:
             hit_x = self.player_x + perp_wall_dist * ray_dir_x
             hit_y = map_y if ray_dir_y > 0 else map_y + 1
             
-        return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y
+        return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side

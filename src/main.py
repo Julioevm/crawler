@@ -30,16 +30,20 @@ def main():
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Crawler - First-Person Dungeon Crawler")
     
-    # Define a simple map (0 = empty space, 1 = wall)
+    # Define a tighter, more corridor-like map to enhance the feeling of confined spaces
     map_data = [
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 0, 0, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 0, 0, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1]
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ]
     
     # Create the texture manager
@@ -86,10 +90,6 @@ def main():
     
     # Game messages
     messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory"]
-    
-    # Movement speeds
-    move_speed = 1.0  # Grid-based movement (1 tile per action)
-    rot_speed = math.pi / 2  # 90 degrees per turn
     
     # Set up the clock for controlling frame rate
     clock = pygame.time.Clock()

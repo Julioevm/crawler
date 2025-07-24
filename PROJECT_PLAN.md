@@ -31,6 +31,8 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [x] Add placeholder texture files for walls
 - [x] Use unified dungeon wall texture for all walls
 - [x] Implement proper texture coordinate calculation
+- [x] Adjust spatial representation to make cells feel like individual walkable spaces
+- [x] Further reduce cell size to create a more claustrophobic feeling
 
 ## Core Engine Features
 - [ ] Implement proper collision detection with walls
