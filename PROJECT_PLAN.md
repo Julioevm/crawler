@@ -25,6 +25,7 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [x] Implement intuitive control scheme (WASD/Arrow keys)
 - [x] Fix player turning to properly rotate the camera view
 - [x] Fix player movement to align with camera direction
+- [x] Add compass to UI to show player facing direction
 
 ## Core Engine Features
 - [ ] Implement proper collision detection with walls
