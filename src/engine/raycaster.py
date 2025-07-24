@@ -20,9 +20,12 @@ class Raycaster:
         self.player_y = 1.5
         self.player_angle = 0
         
-        # Rendering properties - balanced proportions
+        # Rendering properties
         self.fov = math.pi / 3  # 60 degrees field of view
-        self.wall_height = self.screen_height // 3  # Wall height takes up a third of the screen height
+        # Distance to the projection plane. This is key for a correct 3D projection.
+        # It is calculated based on the screen width and the field of view.
+        # This replaces the arbitrary `wall_height` scaling factor.
+        self.projection_plane_dist = (self.screen_width / 2) / math.tan(self.fov / 2)
         self.wall_colors = {
             1: (100, 100, 110),  # Dungeon wall color
         }
@@ -65,8 +68,9 @@ class Raycaster:
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
             
-            # Calculate wall height - with a minimum height to avoid division by zero
-            wall_height = max(1, (self.wall_height / distance)) if distance > 0 else self.screen_height
+            # Calculate wall height based on the distance to the projection plane.
+            # This ensures the projection is geometrically correct.
+            wall_height = max(1, (self.projection_plane_dist / distance)) if distance > 0 else self.screen_height
             
             # Use dungeon wall texture for all walls
             texture = self.texture_manager.get_texture("dungeon_wall")
