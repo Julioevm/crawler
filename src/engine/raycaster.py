@@ -65,9 +65,6 @@ class Raycaster:
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
             
-            # Correct for fisheye effect
-            distance *= math.cos(ray_angle - self.player_angle)
-            
             # Calculate wall height - with a minimum height to avoid division by zero
             wall_height = max(1, (self.wall_height / distance)) if distance > 0 else self.screen_height
             
