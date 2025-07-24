@@ -20,9 +20,9 @@ class Raycaster:
         self.player_y = 1.5
         self.player_angle = 0
         
-        # Rendering properties - adjusted to make cells feel smaller and more claustrophobic
-        self.fov = math.pi / 6  # 30 degrees field of view (even narrower)
-        self.wall_height = 256  # Much taller walls
+        # Rendering properties - balanced proportions
+        self.fov = math.pi / 3  # 60 degrees field of view
+        self.wall_height = self.screen_height // 3  # Wall height takes up a third of the screen height
         self.wall_colors = {
             1: (100, 100, 110),  # Dungeon wall color
         }
@@ -48,6 +48,9 @@ class Raycaster:
     
     def cast_rays(self, screen):
         """Cast rays and render the 3D view"""
+        # Render floor and ceiling first
+        self.render_floor_and_ceiling(screen)
+        
         # Cast one ray for each column of the screen
         for x in range(self.screen_width):
             # Calculate the ray angle
@@ -62,6 +65,9 @@ class Raycaster:
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
             
+            # Correct for fisheye effect
+            distance *= math.cos(ray_angle - self.player_angle)
+            
             # Calculate wall height - with a minimum height to avoid division by zero
             wall_height = max(1, (self.wall_height / distance)) if distance > 0 else self.screen_height
             
@@ -70,7 +76,7 @@ class Raycaster:
             
             # Draw textured wall slice if texture is available
             if wall_type > 0 and texture:
-                # Calculate wall position
+                # Calculate wall position - centered between ceiling and floor
                 wall_top = (self.screen_height - wall_height) // 2
                 wall_bottom = wall_top + wall_height
                 
@@ -104,9 +110,25 @@ class Raycaster:
                 # Draw empty space (don't draw anything)
                 pass
         
-        # Draw a simple floor with a gradient to enhance depth perception
+    def render_floor_and_ceiling(self, screen):
+        """Render textured floor and ceiling using raycasting technique"""
+        # For now, we'll use solid colors for floor and ceiling
+        # Later we can add texture support
         floor_color = (50, 50, 50)
+        ceiling_color = (30, 30, 40)
+        
+        # Draw floor and ceiling
+        pygame.draw.rect(screen, ceiling_color, (0, 0, self.screen_width, self.screen_height // 2))
         pygame.draw.rect(screen, floor_color, (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
+        
+        # In a full implementation, we would:
+        # 1. For each pixel in the floor/ceiling area:
+        #    - Calculate the distance based on vertical position
+        #    - Determine the world position (x, y) of that pixel
+        #    - Find which map cell that position is in
+        #    - Calculate texture coordinates within that cell
+        #    - Draw the appropriate texel
+        # This is more computationally expensive than the wall rendering
     
     def cast_single_ray(self, ray_angle):
         """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
