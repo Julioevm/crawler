@@ -19,6 +19,7 @@ from game.combat_manager import CombatManager
 from ui.ui import UI
 from ui.inventory_ui import InventoryUI
 from ui.combat_ui import CombatUI
+from ui.minimap_ui import MinimapUI
 
 def main():
     # Initialize pygame
@@ -87,9 +88,10 @@ def main():
     ui = UI(screen_width, screen_height)
     inventory_ui = InventoryUI(screen_width, screen_height)
     combat_ui = CombatUI(screen_width, screen_height)
+    minimap_ui = MinimapUI(screen_width, screen_height, len(map_data[0]), len(map_data))
     
     # Game messages
-    messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory"]
+    messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory", "Press 'TAB' to show minimap"]
     
     # Set up the clock for controlling frame rate
     clock = pygame.time.Clock()
@@ -104,6 +106,10 @@ def main():
             if event.type == QUIT:
                 running = False
             elif event.type == KEYDOWN:
+                # Handle minimap UI input
+                if minimap_ui.handle_input(event):
+                    continue  # Skip other input handling when minimap is toggled
+                    
                 # Handle combat UI input
                 if combat_manager.in_combat:
                     combat_result = combat_ui.handle_input(event, combat_manager)
@@ -128,6 +134,9 @@ def main():
                 elif event.key == K_i and not combat_manager.in_combat:
                     # Toggle inventory visibility
                     inventory_ui.toggle_visibility()
+                elif event.key == K_TAB and not combat_manager.in_combat:
+                    # Toggle minimap visibility
+                    minimap_ui.toggle_visibility()
                 elif turn_manager.player_turn and waiting_for_input and not inventory_ui.visible and not combat_manager.in_combat:
                     # Handle player movement and actions
                     moved = False
@@ -216,8 +225,9 @@ def main():
         # Clear the screen
         screen.fill((0, 0, 0))
         
-        # Render the 3D view
-        raycaster.cast_rays(screen)
+        # Render the 3D view (only if minimap is not visible)
+        if not minimap_ui.visible:
+            raycaster.cast_rays(screen)
         
         # Draw UI
         ui.draw_player_stats(screen, player)
@@ -228,6 +238,9 @@ def main():
         
         # Draw combat UI if in combat
         combat_ui.draw(screen, combat_manager)
+        
+        # Draw minimap if visible
+        minimap_ui.draw(screen, game_map, player)
         
         # Update the display
         pygame.display.flip()
