@@ -21,7 +21,7 @@ class Raycaster:
         self.player_angle = 0
         
         # Rendering properties
-        self.fov = math.pi / 3  # 60 degrees field of view
+        self.fov = math.pi * 5 / 12  # 75 degrees field of view
         # Distance to the projection plane. This is key for a correct 3D projection.
         # It is calculated based on the screen width and the field of view.
         # This replaces the arbitrary `wall_height` scaling factor.
@@ -54,6 +54,11 @@ class Raycaster:
         # Render floor and ceiling first
         self.render_floor_and_ceiling(screen)
         
+        # Calculate the virtual camera position, offset from the player's actual position
+        offset = 0.5  # Render from half a tile behind the player
+        cam_x = self.player_x - offset * math.cos(self.player_angle)
+        cam_y = self.player_y - offset * math.sin(self.player_angle)
+        
         # Cast one ray for each column of the screen
         for x in range(self.screen_width):
             # Calculate the ray angle
@@ -62,8 +67,8 @@ class Raycaster:
             # Normalize the angle
             ray_angle = ray_angle % (2 * math.pi)
             
-            # Cast the ray
-            distance, wall_type, hit_x, hit_y, side = self.cast_single_ray(ray_angle)
+            # Cast the ray from the virtual camera position
+            distance, wall_type, hit_x, hit_y, side = self.cast_single_ray(ray_angle, cam_x, cam_y)
             
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
@@ -131,15 +136,15 @@ class Raycaster:
         #    - Draw the appropriate texel
         # This is more computationally expensive than the wall rendering
     
-    def cast_single_ray(self, ray_angle):
+    def cast_single_ray(self, ray_angle, player_x, player_y):
         """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
         # Ray direction
         ray_dir_x = math.cos(ray_angle)
         ray_dir_y = math.sin(ray_angle)
         
         # Player's map position
-        map_x = int(self.player_x)
-        map_y = int(self.player_y)
+        map_x = int(player_x)
+        map_y = int(player_y)
         
         # Length of ray from current position to next x or y-side
         delta_dist_x = abs(1 / ray_dir_x) if ray_dir_x != 0 else float('inf')
@@ -151,14 +156,14 @@ class Raycaster:
         
         # Length of ray from one side to next in map
         if ray_dir_x < 0:
-            side_dist_x = (self.player_x - map_x) * delta_dist_x
+            side_dist_x = (player_x - map_x) * delta_dist_x
         else:
-            side_dist_x = (map_x + 1.0 - self.player_x) * delta_dist_x
+            side_dist_x = (map_x + 1.0 - player_x) * delta_dist_x
             
         if ray_dir_y < 0:
-            side_dist_y = (self.player_y - map_y) * delta_dist_y
+            side_dist_y = (player_y - map_y) * delta_dist_y
         else:
-            side_dist_y = (map_y + 1.0 - self.player_y) * delta_dist_y
+            side_dist_y = (map_y + 1.0 - player_y) * delta_dist_y
         
         # Perform DDA (Digital Differential Analysis)
         hit = False
@@ -185,14 +190,14 @@ class Raycaster:
         
         # Calculate distance projected on camera direction
         if side == 0:
-            perp_wall_dist = (map_x - self.player_x + (1 - step_x) / 2) / ray_dir_x
+            perp_wall_dist = (map_x - player_x + (1 - step_x) / 2) / ray_dir_x
             # Calculate exact hit position
-            hit_y = self.player_y + perp_wall_dist * ray_dir_y
+            hit_y = player_y + perp_wall_dist * ray_dir_y
             hit_x = map_x if ray_dir_x > 0 else map_x + 1
         else:
-            perp_wall_dist = (map_y - self.player_y + (1 - step_y) / 2) / ray_dir_y
+            perp_wall_dist = (map_y - player_y + (1 - step_y) / 2) / ray_dir_y
             # Calculate exact hit position
-            hit_x = self.player_x + perp_wall_dist * ray_dir_x
+            hit_x = player_x + perp_wall_dist * ray_dir_x
             hit_y = map_y if ray_dir_y > 0 else map_y + 1
             
         return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side
