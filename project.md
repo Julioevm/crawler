@@ -31,6 +31,8 @@ Each character in the party can equip or use equipment separately.
 
 ## Development
 
+We use Pygame Community Edition and Pygame GUI for the game rendering, Input, etc. and GUI rendering respectively.
+
 - Avoid using magic numbers, use variables and descriptive names.
 - Be mindful of changes that might break existing code.
 - Run the project after a change to ensure the game is working.
