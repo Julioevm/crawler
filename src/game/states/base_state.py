@@ -22,7 +22,7 @@ class BaseState:
         """
         pass
 
-    def update(self, dt):
+    def update(self, time_delta):
         """
         Update the state.
         dt is the time since last update.

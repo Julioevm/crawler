@@ -13,9 +13,9 @@ from entities.weapon import Weapon
 from game.game_map import GameMap
 from game.turn_manager import TurnManager
 from game.combat_manager import CombatManager
-from ui.ui import UI
 from ui.combat_ui import CombatUI
 from ui.minimap_ui import MinimapUI
+from ui.game_gui import GameGUI
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from .inventory_state import InventoryState
 from .combat_state import CombatState
@@ -35,9 +35,9 @@ class PlayingState(BaseState):
         self.turn_manager = TurnManager(self.game_map)
         self.combat_manager = CombatManager()
 
-        self.ui = UI(SCREEN_WIDTH, SCREEN_HEIGHT, show_fps=self.game.show_fps)
         self.combat_ui = CombatUI(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.minimap_ui = MinimapUI(SCREEN_WIDTH, SCREEN_HEIGHT, self.game_map.width, self.game_map.height)
+        self.game_gui = GameGUI()
 
         self.messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory", "Press 'TAB' to show minimap"]
         self.game_map.update_light_map()
@@ -86,6 +86,7 @@ class PlayingState(BaseState):
                 self.game_map.add_entity(enemy)
 
     def get_event(self, event):
+        self.game_gui.process_events(event)
         if event.type == KEYDOWN:
             if self.minimap_ui.handle_input(event):
                 return
@@ -95,8 +96,6 @@ class PlayingState(BaseState):
                 self.game.push_state(new_state)
             elif event.key == K_TAB and not self.combat_manager.in_combat:
                 self.minimap_ui.toggle_visibility()
-            elif event.key == K_h:
-                self.ui.toggle_visibility()
             elif self.turn_manager.player_turn and self.waiting_for_input and not self.combat_manager.in_combat:
                 self.handle_party_input(event)
 
@@ -160,12 +159,18 @@ class PlayingState(BaseState):
             self.turn_manager.end_player_turn()
             self.waiting_for_input = True
 
+    def update(self, time_delta):
+        self.game_gui.update(time_delta)
+
     def draw(self, screen, clock):
         if not self.minimap_ui.visible:
             self.raycaster.cast_rays(screen)
         
-        self.ui.draw_party_stats(screen, self.party)
-        self.ui.draw_messages(screen, self.messages)
-        self.ui.draw_fps(screen, clock.get_fps())
+        # self.ui.draw_fps(screen, clock.get_fps())
         
         self.minimap_ui.draw(screen, self.game_map, self.party)
+        self.game_gui.update_message_log(self.messages)
+        self.game_gui.update_compass(self.party.facing)
+        self.game_gui.draw_minimap(screen, self.game_map, self.party)
+        self.game_gui.update_party_stats(self.party)
+        self.game_gui.draw(screen)

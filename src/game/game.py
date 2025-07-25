@@ -37,9 +37,9 @@ class Game:
         The main game loop.
         """
         while self.running:
-            dt = self.clock.tick(60) / 1000.0
+            time_delta = self.clock.tick(60) / 1000.0
             self.handle_events()
-            self.update(dt)
+            self.update(time_delta)
             self.draw()
 
         self.cleanup()
@@ -57,12 +57,12 @@ class Game:
             if self.states:
                 self.states[-1].get_event(event)
 
-    def update(self, dt):
+    def update(self, time_delta):
         """
         Updates the current game state.
         """
         if self.states:
-            self.states[-1].update(dt)
+            self.states[-1].update(time_delta)
             if self.states[-1].quit:
                 self.running = False
             elif self.states[-1].done:
