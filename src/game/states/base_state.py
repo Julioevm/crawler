@@ -7,6 +7,7 @@ class BaseState:
         self.quit = False
         self.next_state = None
         self.screen_rect = None
+        self.persist = None
 
     def startup(self, persistent):
         """

@@ -129,7 +129,6 @@ class PlayingState(BaseState):
                     self.player.y = target_y
                     moved = True
                     self.game_map.update_light_map()
-                    self.messages.append(f"Moved to ({self.player.x}, {self.player.y})")
                 else:
                     self.player.x = target_x
                     self.player.y = target_y
