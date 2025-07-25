@@ -5,7 +5,7 @@ Base entity class for all game objects.
 class Entity:
     """Base class for all entities in the game world."""
     
-    def __init__(self, x, y, symbol, name, description="", sprite=None):
+    def __init__(self, x, y, symbol, name, description="", sprite=None, light_source=None):
         self.x = x
         self.y = y
         self.symbol = symbol  # Character used to represent the entity on map
@@ -13,6 +13,7 @@ class Entity:
         self.description = description
         self.sprite = sprite
         self.blocks_movement = True  # By default, entities block movement
+        self.light_source = light_source
     
     def move(self, dx, dy, game_map):
         """Attempt to move the entity by dx, dy on the game map."""

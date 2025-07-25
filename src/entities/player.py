@@ -9,7 +9,7 @@ class Player(Entity):
     """Player character entity."""
     
     def __init__(self, x, y):
-        super().__init__(x, y, '@', "Player", "The adventurer exploring the dungeon")
+        super().__init__(x, y, '@', "Player", "The adventurer exploring the dungeon", light_source={'radius': 8, 'strength': 1.0})
         self.hp = 100
         self.max_hp = 100
         self.mp = 50

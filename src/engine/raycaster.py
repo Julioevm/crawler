@@ -73,7 +73,7 @@ class Raycaster:
             ray_angle = ray_angle % (2 * math.pi)
             
             # Cast the ray from the virtual camera position
-            distance, wall_type, hit_x, hit_y, side = self.cast_single_ray(ray_angle, cam_x, cam_y)
+            distance, wall_type, hit_x, hit_y, side, map_x, map_y = self.cast_single_ray(ray_angle, cam_x, cam_y)
             
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
@@ -111,10 +111,23 @@ class Raycaster:
                 
                 # Scale the texture column to match the wall height
                 scaled_column = pygame.transform.scale(tex_column, (1, int(wall_height)))
+                
+                # Apply lighting
+                light_level = self.game_map.light_map[map_y][map_x]
+                darkness = pygame.Surface(scaled_column.get_size()).convert_alpha()
+                darkness.fill((0, 0, 0, 255 * (1 - light_level)))
+                
                 screen.blit(scaled_column, (x, wall_top))
+                screen.blit(darkness, (x, wall_top))
+                
             elif wall_type > 0:
                 # Fallback to solid color if texture not available
                 color = self.wall_colors.get(wall_type, (100, 100, 110))
+                
+                # Apply lighting
+                light_level = self.game_map.light_map[map_y][map_x]
+                color = (int(color[0] * light_level), int(color[1] * light_level), int(color[2] * light_level))
+                
                 wall_top = (self.screen_height - wall_height) // 2
                 wall_bottom = wall_top + wall_height
                 pygame.draw.line(screen, color, (x, wall_top), (x, wall_bottom))
@@ -126,14 +139,21 @@ class Raycaster:
         
     def render_floor_and_ceiling(self, screen):
         """Render textured floor and ceiling using raycasting technique"""
-        # For now, we'll use solid colors for floor and ceiling
-        # Later we can add texture support
+        # Get light level at player's position for a simple ambient effect
+        player_map_x = int(self.player_x)
+        player_map_y = int(self.player_y)
+        light_level = self.game_map.light_map[player_map_y][player_map_x]
+
         floor_color = (50, 50, 50)
         ceiling_color = (30, 30, 40)
-        
+
+        # Apply lighting
+        lit_floor_color = (int(floor_color[0] * light_level), int(floor_color[1] * light_level), int(floor_color[2] * light_level))
+        lit_ceiling_color = (int(ceiling_color[0] * light_level), int(ceiling_color[1] * light_level), int(ceiling_color[2] * light_level))
+
         # Draw floor and ceiling
-        pygame.draw.rect(screen, ceiling_color, (0, 0, self.screen_width, self.screen_height // 2))
-        pygame.draw.rect(screen, floor_color, (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
+        pygame.draw.rect(screen, lit_ceiling_color, (0, 0, self.screen_width, self.screen_height // 2))
+        pygame.draw.rect(screen, lit_floor_color, (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
         
         # In a full implementation, we would:
         # 1. For each pixel in the floor/ceiling area:
@@ -208,7 +228,7 @@ class Raycaster:
             hit_x = player_x + perp_wall_dist * ray_dir_x
             hit_y = map_y if ray_dir_y > 0 else map_y + 1
             
-        return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side
+        return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side, map_x, map_y
 
     def render_sprites(self, screen, z_buffer):
         """Render sprites (enemies, items, etc.)"""
@@ -256,5 +276,12 @@ class Raycaster:
                                 tex_column = sprite.subsurface(tex_x, 0, 1, sprite.get_height())
                                 # Scale it to the correct height
                                 scaled_column = pygame.transform.scale(tex_column, (1, sprite_height))
+                                
+                                # Apply lighting
+                                light_level = self.game_map.light_map[int(entity.y)][int(entity.x)]
+                                darkness = pygame.Surface(scaled_column.get_size()).convert_alpha()
+                                darkness.fill((0, 0, 0, 255 * (1 - light_level)))
+                                
                                 # Draw the column
                                 screen.blit(scaled_column, (stripe, draw_start_y))
+                                screen.blit(darkness, (stripe, draw_start_y))

@@ -96,6 +96,9 @@ def main():
     # Set up the clock for controlling frame rate
     clock = pygame.time.Clock()
     
+    # Initial light map calculation
+    game_map.update_light_map()
+    
     # Main game loop
     running = True
     waiting_for_input = True  # In turn-based, we wait for player input
@@ -219,6 +222,7 @@ def main():
                     if moved and not combat_manager.in_combat:
                         raycaster.set_player_position(player.x, player.y)
                         raycaster.set_player_angle(player.angle)
+                        game_map.update_light_map()
                         turn_manager.end_player_turn()
                         waiting_for_input = True
         
