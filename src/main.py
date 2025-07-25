@@ -71,7 +71,7 @@ def main():
     
     # Create some enemies
     enemy1 = Enemy(3, 3, "Goblin", 30, 8, 2, sprite="goblin")
-    enemy2 = Enemy(5, 5, "Orc", 50, 12, 5)
+    enemy2 = Enemy(5, 5, "Slime", 25, 3, 1 , sprite="slime")
     game_map.add_entity(enemy1)
     game_map.add_entity(enemy2)
     

@@ -76,6 +76,7 @@ class TextureManager:
         
         # Load sprites
         self.load_sprite("goblin", os.path.join(self.assets_path, "sprites", "goblin.png"))
+        self.load_sprite("slime", os.path.join(self.assets_path, "sprites", "slime.png"))
         
         # Also create some simple colored textures as fallbacks
         if "dungeon_wall" not in self.textures:
