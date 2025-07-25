@@ -214,13 +214,21 @@ class GameGUI:
         self.party_collapsed = not self.party_collapsed
         if self.party_collapsed:
             self.party_panel.set_dimensions((SCREEN_WIDTH, 80))
+            self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 80))
             for elements in self.character_elements:
                 elements["portrait"].hide()
-                elements["panel"].set_dimensions((150, 60))
+                elements["panel"].set_dimensions((150, 70))
+                elements["name"].set_relative_position((10, 5))
+                elements["hp_bar"].set_relative_position((10, 25))
+                elements["mp_bar"].set_relative_position((10, 40))
             self.party_collapse_button.set_text('+')
         else:
             self.party_panel.set_dimensions((SCREEN_WIDTH, 150))
+            self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 150))
             for elements in self.character_elements:
                 elements["portrait"].show()
                 elements["panel"].set_dimensions((150, 130))
+                elements["name"].set_relative_position((10, 80))
+                elements["hp_bar"].set_relative_position((10, 100))
+                elements["mp_bar"].set_relative_position((10, 115))
             self.party_collapse_button.set_text('-')
