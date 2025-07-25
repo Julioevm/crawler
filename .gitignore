@@ -4,3 +4,4 @@
 .roo/
 QWEN.md
 base_assets/*
+*crawler.egg-info
