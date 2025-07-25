@@ -91,11 +91,11 @@ class PlayingState(BaseState):
         moved = False
         dx, dy = 0, 0
 
-        if event.key == K_w:
+        if event.key == K_w or event.key == K_UP:
             dx = math.cos(self.player.angle)
             dy = math.sin(self.player.angle)
             self.messages.append("You move forward")
-        elif event.key == K_s:
+        elif event.key == K_s or event.key == K_DOWN:
             dx = -math.cos(self.player.angle)
             dy = -math.sin(self.player.angle)
             self.messages.append("You move backward")
