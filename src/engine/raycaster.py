@@ -140,65 +140,68 @@ class Raycaster:
     def render_floor_and_ceiling(self, screen):
         """Render textured floor and ceiling using raycasting technique"""
         floor_texture = self.texture_manager.get_texture("dungeon_floor")
-        ceiling_color = (30, 30, 40) # Keep ceiling as a solid color for now
+        ceil_texture = self.texture_manager.get_texture("dungeon_ceil")
 
-        # Draw ceiling
-        pygame.draw.rect(screen, ceiling_color, (0, 0, self.screen_width, self.screen_height // 2))
+        # Fallback colors
+        floor_color = (50, 50, 50)
+        ceiling_color = (40, 40, 40)
 
-        if not floor_texture:
-            # Fallback to solid color if texture is not available
-            player_map_x = int(self.player_x)
-            player_map_y = int(self.player_y)
-            light_level = self.game_map.light_map[player_map_y][player_map_x]
-            floor_color = (50, 50, 50)
-            lit_floor_color = (int(floor_color[0] * light_level), int(floor_color[1] * light_level), int(floor_color[2] * light_level))
-            pygame.draw.rect(screen, lit_floor_color, (0, self.screen_height // 2, self.screen_width, self.screen_height // 2))
-            return
+        # Render floor and ceiling
+        for y in range(self.screen_height):
+            is_floor = y > self.screen_height / 2
+            
+            if is_floor:
+                p = y - self.screen_height // 2
+                texture = floor_texture
+                fallback_color = floor_color
+            else:
+                p = self.screen_height // 2 - y
+                texture = ceil_texture
+                fallback_color = ceiling_color
 
-        # Render textured floor
-        for y in range(self.screen_height // 2, self.screen_height):
+            # Ray direction for the leftmost and rightmost ray
             # Ray direction for the leftmost and rightmost ray
             ray_dir_x0 = math.cos(self.player_angle - self.fov / 2)
             ray_dir_y0 = math.sin(self.player_angle - self.fov / 2)
             ray_dir_x1 = math.cos(self.player_angle + self.fov / 2)
             ray_dir_y1 = math.sin(self.player_angle + self.fov / 2)
 
-            # Vertical position of the pixel on the screen
-            p = y - self.screen_height // 2
-
             if p == 0:
+                # Avoid division by zero
+                screen.set_at((0, y), (0,0,0)) # Should not happen often
                 continue
-            
+
             # Vertical position of the camera.
             pos_z = 0.5 * self.screen_height
 
             # Horizontal distance from the camera to the floor for the current row.
-            # 0.5 is the z position of the camera.
-            row_distance = pos_z / p if p != 0 else float('inf')
+            row_distance = pos_z / p
 
             # Calculate the real world step vector we have to add for each x (parallel to camera plane)
-            # adding step_x to floor_x and step_y to floor_y for each pixel
             step_x = row_distance * (ray_dir_x1 - ray_dir_x0) / self.screen_width
             step_y = row_distance * (ray_dir_y1 - ray_dir_y0) / self.screen_width
 
             # Real world coordinates of the leftmost column. This will be updated as we step to the right.
-            floor_x = self.player_x + row_distance * ray_dir_x0
-            floor_y = self.player_y + row_distance * ray_dir_y0
+            tex_world_x = self.player_x + row_distance * ray_dir_x0
+            tex_world_y = self.player_y + row_distance * ray_dir_y0
 
             for x in range(self.screen_width):
-                # The cell coord is simply got from the integer parts of floor_x and floor_y
-                cell_x = int(floor_x)
-                cell_y = int(floor_y)
+                # The cell coord is simply got from the integer parts of tex_world_x and tex_world_y
+                cell_x = int(tex_world_x)
+                cell_y = int(tex_world_y)
 
                 # Get the texture coordinate from the fractional part
-                tx = int(self.tex_width * (floor_x - cell_x)) & (self.tex_width - 1)
-                ty = int(self.tex_height * (floor_y - cell_y)) & (self.tex_height - 1)
+                tx = int(self.tex_width * (tex_world_x - cell_x)) & (self.tex_width - 1)
+                ty = int(self.tex_height * (tex_world_y - cell_y)) & (self.tex_height - 1)
 
-                floor_x += step_x
-                floor_y += step_y
+                tex_world_x += step_x
+                tex_world_y += step_y
 
-                # Get the color from the texture
-                color = floor_texture.get_at((tx, ty))
+                # Get the color from the texture or use fallback
+                if texture:
+                    color = texture.get_at((tx, ty))
+                else:
+                    color = fallback_color
 
                 # Apply lighting
                 if 0 <= cell_x < self.map_width and 0 <= cell_y < self.map_height:

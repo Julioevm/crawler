@@ -6,6 +6,7 @@ Main entry point for the Crawler game.
 import pygame
 import sys
 import math
+import argparse
 from pygame.locals import *
 from engine.raycaster import Raycaster
 from engine.texture_manager import TextureManager
@@ -22,6 +23,11 @@ from ui.combat_ui import CombatUI
 from ui.minimap_ui import MinimapUI
 
 def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Crawler - First-Person Dungeon Crawler")
+    parser.add_argument("--fps", action="store_true", help="Display FPS counter")
+    args = parser.parse_args()
+
     # Initialize pygame
     pygame.init()
     
@@ -85,7 +91,7 @@ def main():
     combat_manager = CombatManager()
     
     # Create the UI systems
-    ui = UI(screen_width, screen_height)
+    ui = UI(screen_width, screen_height, show_fps=args.fps)
     inventory_ui = InventoryUI(screen_width, screen_height)
     combat_ui = CombatUI(screen_width, screen_height)
     minimap_ui = MinimapUI(screen_width, screen_height, len(map_data[0]), len(map_data))
@@ -236,6 +242,7 @@ def main():
         # Draw UI
         ui.draw_player_stats(screen, player)
         ui.draw_messages(screen, messages)
+        ui.draw_fps(screen, clock.get_fps())
         
         # Draw inventory UI if visible
         inventory_ui.draw(screen, player)

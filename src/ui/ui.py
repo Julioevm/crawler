@@ -7,11 +7,12 @@ import pygame
 class UI:
     """Basic UI system for the game."""
     
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_width, screen_height, show_fps=False):
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.font = pygame.font.Font(None, 36)
         self.small_font = pygame.font.Font(None, 24)
+        self.show_fps = show_fps
         
     def draw_player_stats(self, screen, player):
         """Draw player stats on the screen."""
@@ -43,3 +44,9 @@ class UI:
             text = self.small_font.render(message, True, (255, 255, 255))
             screen.blit(text, (10, y_offset))
             y_offset -= 30
+
+    def draw_fps(self, screen, fps):
+        """Draw the FPS counter on the screen."""
+        if self.show_fps:
+            fps_text = self.font.render(f"FPS: {fps:.2f}", True, (255, 255, 255))
+            screen.blit(fps_text, (self.screen_width - 150, 10))
