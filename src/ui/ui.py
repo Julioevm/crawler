@@ -14,26 +14,25 @@ class UI:
         self.small_font = pygame.font.Font(None, 24)
         self.show_fps = show_fps
         
-    def draw_player_stats(self, screen, player):
-        """Draw player stats on the screen."""
+    def draw_party_stats(self, screen, party):
+        """Draw party stats on the screen."""
         # Create a semi-transparent background for the stats
         stats_surface = pygame.Surface((200, 130))
         stats_surface.set_alpha(128)
         stats_surface.fill((0, 0, 0))
         screen.blit(stats_surface, (10, 10))
         
-        # Draw player stats
-        hp_text = self.font.render(f"HP: {player.hp}/{player.max_hp}", True, (255, 255, 255))
-        mp_text = self.font.render(f"MP: {player.mp}/{player.max_mp}", True, (255, 255, 255))
-        level_text = self.font.render(f"Level: {player.level}", True, (255, 255, 255))
+        y_offset = 0
+        for character in party.characters:
+            hp_text = self.font.render(f"HP: {character.hp}/{character.max_hp}", True, (255, 255, 255))
+            mp_text = self.font.render(f"MP: {character.mp}/{character.max_mp}", True, (255, 255, 255))
+            screen.blit(hp_text, (20, 20 + y_offset))
+            screen.blit(mp_text, (20, 50 + y_offset))
+            y_offset += 60
         
         # Draw compass direction
         directions = ["N", "E", "S", "W"]
-        direction_text = self.font.render(f"Facing: {directions[player.facing]}", True, (255, 255, 255))
-        
-        screen.blit(hp_text, (20, 20))
-        screen.blit(mp_text, (20, 50))
-        screen.blit(level_text, (20, 80))
+        direction_text = self.font.render(f"Facing: {directions[party.facing]}", True, (255, 255, 255))
         screen.blit(direction_text, (20, 110))
         
     def draw_messages(self, screen, messages):

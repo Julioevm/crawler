@@ -9,7 +9,7 @@ class Game:
 
     This class initializes the game, runs the main game loop, and manages game states.
     """
-    def __init__(self):
+    def __init__(self, show_fps=False):
         """
         Initializes the game, including pygame, the screen, and the clock.
         """
@@ -19,6 +19,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.states = []
+        self.show_fps = show_fps
         self.load_states()
 
     def load_states(self):

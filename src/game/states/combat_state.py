@@ -4,16 +4,16 @@ from ui.combat_ui import CombatUI
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class CombatState(BaseState):
-    def __init__(self, game, player, enemy, combat_manager):
+    def __init__(self, game, party, enemy, combat_manager):
         super().__init__()
         self.game = game
-        self.player = player
+        self.party = party
         self.enemy = enemy
         self.combat_manager = combat_manager
         self.combat_ui = CombatUI(SCREEN_WIDTH, SCREEN_HEIGHT)
         
-        combat_log = self.combat_manager.start_combat(self.player, self.enemy)
-        self.combat_ui.start_combat(self.player, self.enemy)
+        combat_log = self.combat_manager.start_combat(self.party, self.enemy)
+        self.combat_ui.start_combat(self.party, self.enemy)
         # TODO: Pass combat log to a message system
 
     def get_event(self, event):

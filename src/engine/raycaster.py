@@ -19,10 +19,10 @@ class Raycaster:
         self.map_height = len(self.map_data)
         self.texture_manager = texture_manager
         
-        # Player properties (center of the grid cell)
-        self.player_x = 1.5
-        self.player_y = 1.5
-        self.player_angle = 0
+        # Party properties (center of the grid cell)
+        self.party_x = 1.5
+        self.party_y = 1.5
+        self.party_angle = 0
         
         # Rendering properties
         self.fov = math.pi * 5 / 12  # 75 degrees field of view
@@ -41,14 +41,14 @@ class Raycaster:
             self.texture_manager = TextureManager()
             self.texture_manager.create_default_textures()
     
-    def set_player_position(self, x, y):
-        """Set the player's position"""
-        self.player_x = x + 0.5  # Center of the cell
-        self.player_y = y + 0.5  # Center of the cell
+    def set_party_position(self, x, y):
+        """Set the party's position"""
+        self.party_x = x + 0.5  # Center of the cell
+        self.party_y = y + 0.5  # Center of the cell
     
-    def set_player_angle(self, angle):
-        """Set the player's viewing angle"""
-        self.player_angle = angle
+    def set_party_angle(self, angle):
+        """Set the party's viewing angle"""
+        self.party_angle = angle
     
     def cast_rays(self, screen):
         """Cast rays and render the 3D view"""
@@ -59,14 +59,14 @@ class Raycaster:
         z_buffer = [float('inf')] * self.screen_width
         
         # Calculate the virtual camera position, offset from the player's actual position
-        offset = 0.5  # Render from half a tile behind the player
-        cam_x = self.player_x - offset * math.cos(self.player_angle)
-        cam_y = self.player_y - offset * math.sin(self.player_angle)
+        offset = 0.5  # Render from half a tile behind the party
+        cam_x = self.party_x - offset * math.cos(self.party_angle)
+        cam_y = self.party_y - offset * math.sin(self.party_angle)
         
         # Cast one ray for each column of the screen
         for x in range(self.screen_width):
             # Calculate the ray angle
-            ray_angle = self.player_angle - self.fov / 2 + (x / self.screen_width) * self.fov
+            ray_angle = self.party_angle - self.fov / 2 + (x / self.screen_width) * self.fov
             
             # Normalize the angle
             ray_angle = ray_angle % (2 * math.pi)
@@ -75,7 +75,7 @@ class Raycaster:
             distance, wall_type, hit_x, hit_y, side, map_x, map_y = self.cast_single_ray(ray_angle, cam_x, cam_y)
             
             # Correct for fisheye effect
-            distance *= math.cos(ray_angle - self.player_angle)
+            distance *= math.cos(ray_angle - self.party_angle)
             z_buffer[x] = distance
             
             # Calculate wall height based on the distance to the projection plane.
@@ -133,8 +133,8 @@ class Raycaster:
         ceil_texture_arr = self.texture_manager.get_texture_array("dungeon_ceil")
 
         # Pre-calculate angles
-        angle_cos = math.cos(self.player_angle)
-        angle_sin = math.sin(self.player_angle)
+        angle_cos = math.cos(self.party_angle)
+        angle_sin = math.sin(self.party_angle)
         fov_half = self.fov / 2
         
         # Ray directions for the leftmost and rightmost columns
@@ -165,10 +165,10 @@ class Raycaster:
         step_y_ceil = row_distance_ceil[:, np.newaxis] * (ray_dir_y1 - ray_dir_y0) / self.screen_width
 
         # Calculate texture world coordinates for floor and ceiling
-        tex_world_x_floor = self.player_x + row_distance_floor[:, np.newaxis] * ray_dir_x0
-        tex_world_y_floor = self.player_y + row_distance_floor[:, np.newaxis] * ray_dir_y0
-        tex_world_x_ceil = self.player_x + row_distance_ceil[:, np.newaxis] * ray_dir_x0
-        tex_world_y_ceil = self.player_y + row_distance_ceil[:, np.newaxis] * ray_dir_y0
+        tex_world_x_floor = self.party_x + row_distance_floor[:, np.newaxis] * ray_dir_x0
+        tex_world_y_floor = self.party_y + row_distance_floor[:, np.newaxis] * ray_dir_y0
+        tex_world_x_ceil = self.party_x + row_distance_ceil[:, np.newaxis] * ray_dir_x0
+        tex_world_y_ceil = self.party_y + row_distance_ceil[:, np.newaxis] * ray_dir_y0
 
         # Generate x-coordinates for stepping
         x_coords = np.arange(self.screen_width)
@@ -220,15 +220,15 @@ class Raycaster:
         # Blit the buffer to the screen, transposing the array to match screen dimensions
         pygame.surfarray.blit_array(screen, self.floor_buffer.transpose(1, 0, 2))
     
-    def cast_single_ray(self, ray_angle, player_x, player_y):
+    def cast_single_ray(self, ray_angle, party_x, party_y):
         """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
         # Ray direction
         ray_dir_x = math.cos(ray_angle)
         ray_dir_y = math.sin(ray_angle)
         
-        # Player's map position
-        map_x = int(player_x)
-        map_y = int(player_y)
+        # Party's map position
+        map_x = int(party_x)
+        map_y = int(party_y)
         
         # Length of ray from current position to next x or y-side
         delta_dist_x = abs(1 / ray_dir_x) if ray_dir_x != 0 else float('inf')
@@ -240,14 +240,14 @@ class Raycaster:
         
         # Length of ray from one side to next in map
         if ray_dir_x < 0:
-            side_dist_x = (player_x - map_x) * delta_dist_x
+            side_dist_x = (party_x - map_x) * delta_dist_x
         else:
-            side_dist_x = (map_x + 1.0 - player_x) * delta_dist_x
+            side_dist_x = (map_x + 1.0 - party_x) * delta_dist_x
             
         if ray_dir_y < 0:
-            side_dist_y = (player_y - map_y) * delta_dist_y
+            side_dist_y = (party_y - map_y) * delta_dist_y
         else:
-            side_dist_y = (map_y + 1.0 - player_y) * delta_dist_y
+            side_dist_y = (map_y + 1.0 - party_y) * delta_dist_y
         
         # Perform DDA (Digital Differential Analysis)
         hit = False
@@ -274,14 +274,14 @@ class Raycaster:
         
         # Calculate distance projected on camera direction
         if side == 0:
-            perp_wall_dist = (map_x - player_x + (1 - step_x) / 2) / ray_dir_x
+            perp_wall_dist = (map_x - party_x + (1 - step_x) / 2) / ray_dir_x
             # Calculate exact hit position
-            hit_y = player_y + perp_wall_dist * ray_dir_y
+            hit_y = party_y + perp_wall_dist * ray_dir_y
             hit_x = map_x if ray_dir_x > 0 else map_x + 1
         else:
-            perp_wall_dist = (map_y - player_y + (1 - step_y) / 2) / ray_dir_y
+            perp_wall_dist = (map_y - party_y + (1 - step_y) / 2) / ray_dir_y
             # Calculate exact hit position
-            hit_x = player_x + perp_wall_dist * ray_dir_x
+            hit_x = party_x + perp_wall_dist * ray_dir_x
             hit_y = map_y if ray_dir_y > 0 else map_y + 1
             
         return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side, map_x, map_y
@@ -290,20 +290,20 @@ class Raycaster:
         """Render sprites (enemies, items, etc.)"""
         entities = self.game_map.entities
         
-        entities.sort(key=lambda e: ((self.player_x - e.x)**2 + (self.player_y - e.y)**2), reverse=True)
+        entities.sort(key=lambda e: ((self.party_x - e.x)**2 + (self.party_y - e.y)**2), reverse=True)
         
         for entity in entities:
             if entity.sprite and self.texture_manager.get_sprite(entity.sprite):
                 sprite = self.texture_manager.get_sprite(entity.sprite)
                 
-                sprite_x = (entity.x + 0.5) - self.player_x
-                sprite_y = (entity.y + 0.5) - self.player_y
+                sprite_x = (entity.x + 0.5) - self.party_x
+                sprite_y = (entity.y + 0.5) - self.party_y
                 
                 # transform_x is depth, transform_y is horizontal position on camera plane
-                depth = math.cos(self.player_angle) * sprite_x + math.sin(self.player_angle) * sprite_y
-                horizontal_pos = -math.sin(self.player_angle) * sprite_x + math.cos(self.player_angle) * sprite_y
+                depth = math.cos(self.party_angle) * sprite_x + math.sin(self.party_angle) * sprite_y
+                horizontal_pos = -math.sin(self.party_angle) * sprite_x + math.cos(self.party_angle) * sprite_y
                 
-                # Sprite is in front of player
+                # Sprite is in front of party
                 if depth > 0.5: # Use a threshold to avoid clipping
                     # Project sprite to screen
                     sprite_screen_x = int((self.screen_width / 2) * (1 + horizontal_pos / depth))

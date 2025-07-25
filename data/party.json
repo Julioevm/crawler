@@ -1,0 +1,40 @@
+{
+    "characters": [
+        {
+            "name": "Arion",
+            "hp": 100,
+            "mp": 50,
+            "attack": 10,
+            "defense": 5,
+            "items": [
+                {
+                    "type": "weapon",
+                    "name": "Short Sword",
+                    "description": "A basic short sword.",
+                    "attack_bonus": 2
+                },
+                {
+                    "type": "potion",
+                    "name": "Health Potion",
+                    "description": "Restores 20 HP.",
+                    "value": 20
+                }
+            ]
+        },
+        {
+            "name": "Elara",
+            "hp": 80,
+            "mp": 80,
+            "attack": 5,
+            "defense": 3,
+            "items": [
+                {
+                    "type": "weapon",
+                    "name": "Staff",
+                    "description": "A simple wooden staff.",
+                    "attack_bonus": 1
+                }
+            ]
+        }
+    ]
+}

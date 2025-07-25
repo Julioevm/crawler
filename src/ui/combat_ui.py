@@ -16,17 +16,17 @@ class CombatUI:
         self.selected_action = 0
         self.actions = ["Attack", "Flee"]  # Simplified for now
         
-    def start_combat(self, player, enemy):
+    def start_combat(self, party, enemy):
         """Start combat display."""
         self.visible = True
         self.selected_action = 0
-        self.player = player
+        self.party = party
         self.enemy = enemy
         
     def end_combat(self):
         """End combat display."""
         self.visible = False
-        self.player = None
+        self.party = None
         self.enemy = None
         
     def handle_input(self, event, combat_manager):
@@ -43,25 +43,25 @@ class CombatUI:
                 # Execute selected action
                 action = self.actions[self.selected_action]
                 if action == "Attack":
-                    enemy_defeated = combat_manager.player_attack(self.player, self.enemy)
+                    enemy_defeated = combat_manager.player_attack(self.party, self.enemy)
                     if not enemy_defeated and combat_manager.in_combat:
                         # Enemy gets a turn if still alive
-                        player_defeated = combat_manager.enemy_attack(self.player, self.enemy)
-                        if player_defeated:
+                        party_defeated = combat_manager.enemy_attack(self.party, self.enemy)
+                        if party_defeated:
                             return "defeat"
                     else:
                         # Enemy was defeated
                         self.end_combat()
                         return "victory"
                 elif action == "Flee":
-                    fled = combat_manager.try_flee(self.player, self.enemy)
+                    fled = combat_manager.try_flee(self.party, self.enemy)
                     if fled:
                         self.end_combat()
                         return "fled"
                     else:
                         # Enemy gets a turn if flee failed
-                        player_defeated = combat_manager.enemy_attack(self.player, self.enemy)
-                        if player_defeated:
+                        party_defeated = combat_manager.enemy_attack(self.party, self.enemy)
+                        if party_defeated:
                             return "defeat"
                             
         return None
@@ -88,12 +88,15 @@ class CombatUI:
         enemy_hp = self.small_font.render(f"HP: {self.enemy.hp}/{self.enemy.max_hp}", True, (255, 255, 255))
         screen.blit(enemy_hp, (self.screen_width // 2 - enemy_hp.get_width() // 2, self.screen_height // 2 - 110))
         
-        # Draw player info
-        player_text = self.font.render(f"{self.player.name}", True, (100, 255, 100))
-        screen.blit(player_text, (self.screen_width // 2 - player_text.get_width() // 2, self.screen_height // 2 - 50))
-        
-        player_hp = self.small_font.render(f"HP: {self.player.hp}/{self.player.max_hp}", True, (255, 255, 255))
-        screen.blit(player_hp, (self.screen_width // 2 - player_hp.get_width() // 2, self.screen_height // 2 - 20))
+        # Draw party info
+        y_offset = 0
+        for character in self.party.characters:
+            character_text = self.font.render(f"{character.name}", True, (100, 255, 100))
+            screen.blit(character_text, (self.screen_width // 2 - character_text.get_width() // 2, self.screen_height // 2 - 50 + y_offset))
+            
+            character_hp = self.small_font.render(f"HP: {character.hp}/{character.max_hp}", True, (255, 255, 255))
+            screen.blit(character_hp, (self.screen_width // 2 - character_hp.get_width() // 2, self.screen_height // 2 - 20 + y_offset))
+            y_offset += 60
         
         # Draw actions
         for i, action in enumerate(self.actions):

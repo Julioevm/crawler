@@ -18,9 +18,16 @@ class InventoryState(BaseState):
             if event.key == K_i or event.key == K_ESCAPE:
                 self.done = True  # Signal to pop this state
             else:
-                inventory_result = self.inventory_ui.handle_input(event, self.player)
-                if inventory_result:
-                    self.messages.append(inventory_result)
+                item = self.inventory_ui.handle_input(event, self.player)
+                if item:
+                    # For now, use the item on the first character
+                    if self.player.characters:
+                        character = self.player.characters[0]
+                        result = item.use(character)
+                        self.player.remove_from_inventory(item)
+                        self.messages.append(result)
+                    else:
+                        self.messages.append("No characters in the party to use the item on.")
 
     def draw(self, screen, clock):
         self.inventory_ui.draw(screen, self.player)

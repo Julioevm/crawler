@@ -33,8 +33,7 @@ class InventoryUI:
                 # Use the selected item
                 if 0 <= self.selected_item < len(player.inventory):
                     item = player.inventory[self.selected_item]
-                    result = player.use_item(item)
-                    return result
+                    return item
             elif event.key == pygame.K_e or event.key == pygame.K_ESCAPE:
                 # Close inventory
                 self.toggle_visibility()
