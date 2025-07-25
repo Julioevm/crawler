@@ -30,9 +30,6 @@ class Raycaster:
         # It is calculated based on the screen width and the field of view.
         # This replaces the arbitrary `wall_height` scaling factor.
         self.projection_plane_dist = (self.screen_width / 2) / math.tan(self.fov / 2)
-        self.wall_colors = {
-            1: (100, 100, 110),  # Dungeon wall color
-        }
         
         # Texture size
         self.tex_width = TEXTURE_SIZE
@@ -124,17 +121,6 @@ class Raycaster:
                 
                 screen.blit(lit_column, (x, wall_top))
                 
-            elif wall_type > 0:
-                # Fallback to solid color if texture not available
-                color = self.wall_colors.get(wall_type, (100, 100, 110))
-                
-                # Apply lighting
-                light_level = self.game_map.light_map[map_y][map_x]
-                color = (int(color[0] * light_level), int(color[1] * light_level), int(color[2] * light_level))
-                
-                wall_top = (self.screen_height - wall_height) // 2
-                wall_bottom = wall_top + wall_height
-                pygame.draw.line(screen, color, (x, wall_top), (x, wall_bottom))
             else:
                 # Draw empty space (don't draw anything)
                 pass
