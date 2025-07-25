@@ -209,10 +209,17 @@ def main():
                         
                         # Check if the target position is valid
                         if game_map.is_walkable(target_x, target_y):
-                            player.x = target_x
-                            player.y = target_y
-                            moved = True
-                            messages.append(f"Moved to ({player.x}, {player.y})")
+                            # Check if the player has moved to a new tile
+                            if int(player.x) != target_x or int(player.y) != target_y:
+                                player.x = target_x
+                                player.y = target_y
+                                moved = True
+                                game_map.update_light_map()  # Update light map only on tile change
+                                messages.append(f"Moved to ({player.x}, {player.y})")
+                            else: # If not moving to a new tile, just update position
+                                player.x = target_x
+                                player.y = target_y
+                                moved = True
                         
                         # Check for enemy encounters
                         entities_at_position = game_map.get_entities_at(player.x, player.y)
@@ -228,7 +235,6 @@ def main():
                     if moved and not combat_manager.in_combat:
                         raycaster.set_player_position(player.x, player.y)
                         raycaster.set_player_angle(player.angle)
-                        game_map.update_light_map()
                         turn_manager.end_player_turn()
                         waiting_for_input = True
         

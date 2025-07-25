@@ -114,13 +114,15 @@ class Raycaster:
                 # Scale the texture column to match the wall height
                 scaled_column = pygame.transform.scale(tex_column, (1, int(wall_height)))
                 
-                # Apply lighting
+                # Apply lighting more efficiently
                 light_level = self.game_map.light_map[map_y][map_x]
-                darkness = pygame.Surface(scaled_column.get_size()).convert_alpha()
-                darkness.fill((0, 0, 0, 255 * (1 - light_level)))
+                light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
                 
-                screen.blit(scaled_column, (x, wall_top))
-                screen.blit(darkness, (x, wall_top))
+                # Create a copy to avoid modifying the original texture column
+                lit_column = scaled_column.copy()
+                lit_column.fill(light_color, special_flags=pygame.BLEND_MULT)
+                
+                screen.blit(lit_column, (x, wall_top))
                 
             elif wall_type > 0:
                 # Fallback to solid color if texture not available
@@ -332,30 +334,22 @@ class Raycaster:
                     draw_start_x = sprite_screen_x - sprite_width // 2
                     draw_end_x = sprite_screen_x + sprite_width // 2
                     
-                    # Draw the sprite column by column
+                    # Scale the entire sprite once
+                    scaled_sprite = pygame.transform.scale(sprite, (sprite_width, sprite_height))
+                    
+                    # Apply lighting
+                    light_level = self.game_map.light_map[int(entity.y)][int(entity.x)]
+                    light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
+                    
+                    lit_sprite = scaled_sprite.copy()
+                    lit_sprite.fill(light_color, special_flags=pygame.BLEND_MULT)
+
+                    # Draw the sprite column by column, but from the pre-scaled surface
                     for stripe in range(draw_start_x, draw_end_x):
                         # Check if stripe is on screen and in front of a wall
                         if 0 <= stripe < self.screen_width and depth < z_buffer[stripe]:
                             # Calculate texture x coordinate
-                            tex_x = int((stripe - draw_start_x) * sprite.get_width() / sprite_width) if sprite_width > 0 else 0
+                            tex_x = stripe - draw_start_x
                             
-                            if 0 <= tex_x < sprite.get_width():
-                                # Get the column of the texture
-                                tex_column = sprite.subsurface(tex_x, 0, 1, sprite.get_height())
-                                # Scale it to the correct height
-                                scaled_column = pygame.transform.scale(tex_column, (1, sprite_height))
-                                
-                                # Apply lighting
-                                light_level = self.game_map.light_map[int(entity.y)][int(entity.x)]
-                                
-                                # Create a copy to avoid modifying the original texture column
-                                lit_column = scaled_column.copy()
-                                
-                                # Create a lighting color
-                                light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
-                                
-                                # Apply lighting only to non-transparent pixels using multiplicative blending
-                                lit_column.fill(light_color, special_flags=pygame.BLEND_MULT)
-
-                                # Draw the column
-                                screen.blit(lit_column, (stripe, draw_start_y))
+                            # Draw the column from the scaled and lit sprite
+                            screen.blit(lit_sprite, (stripe, draw_start_y), (tex_x, 0, 1, sprite_height))
