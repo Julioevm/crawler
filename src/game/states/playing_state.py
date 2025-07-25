@@ -1,4 +1,3 @@
-import pygame
 import math
 import json
 from pygame.locals import *
@@ -96,6 +95,8 @@ class PlayingState(BaseState):
                 self.game.push_state(new_state)
             elif event.key == K_TAB and not self.combat_manager.in_combat:
                 self.minimap_ui.toggle_visibility()
+            elif event.key == K_h:
+                self.ui.toggle_visibility()
             elif self.turn_manager.player_turn and self.waiting_for_input and not self.combat_manager.in_combat:
                 self.handle_party_input(event)
 

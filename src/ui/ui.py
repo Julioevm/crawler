@@ -13,9 +13,17 @@ class UI:
         self.font = pygame.font.Font(None, 36)
         self.small_font = pygame.font.Font(None, 24)
         self.show_fps = show_fps
+        self.visible = True
         
+    def toggle_visibility(self):
+        """Toggle the visibility of the UI."""
+        self.visible = not self.visible
+
     def draw_party_stats(self, screen, party):
         """Draw party stats on the screen."""
+        if not self.visible:
+            return
+            
         # Create a semi-transparent background for the stats
         stats_surface = pygame.Surface((200, 130))
         stats_surface.set_alpha(128)
@@ -37,6 +45,9 @@ class UI:
         
     def draw_messages(self, screen, messages):
         """Draw game messages on the screen."""
+        if not self.visible:
+            return
+
         # Draw messages in the bottom-left corner
         y_offset = self.screen_height - 40
         for message in reversed(messages[-5:]):  # Show last 5 messages
@@ -46,6 +57,6 @@ class UI:
 
     def draw_fps(self, screen, fps):
         """Draw the FPS counter on the screen."""
-        if self.show_fps:
+        if self.show_fps and self.visible:
             fps_text = self.font.render(f"FPS: {fps:.2f}", True, (255, 255, 255))
             screen.blit(fps_text, (self.screen_width - 150, 10))
