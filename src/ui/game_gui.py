@@ -10,6 +10,7 @@ class GameGUI:
     def __init__(self, texture_manager):
         self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), "data/themes/game_gui.json")
         self.texture_manager = texture_manager
+        self._last_messages = []  # Track last messages to avoid unnecessary updates
 
         # Message Log Panel
         self.message_log_panel = pygame_gui.elements.UIPanel(
@@ -76,10 +77,13 @@ class GameGUI:
 
     def update_message_log(self, messages):
         """Update the message log with new messages."""
-        # The log shows the most recent messages first, so we reverse the list
-        # and join them with line breaks.
-        formatted_messages = "<br>".join(reversed(messages))
-        self.message_log.set_text(formatted_messages)
+        # Only update if messages have changed to preserve scroll position
+        if messages != self._last_messages:
+            # The log shows the most recent messages first, so we reverse the list
+            # and join them with line breaks.
+            formatted_messages = "<br>".join(reversed(messages))
+            self.message_log.set_text(formatted_messages)
+            self._last_messages = messages.copy()  # Store a copy to track changes
 
     def update_compass(self, facing):
         """Update the compass direction."""
