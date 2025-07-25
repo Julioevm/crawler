@@ -21,7 +21,7 @@ class GameGUI:
 
         self.message_log = pygame_gui.elements.UITextBox(
             html_text="",
-            relative_rect=pygame.Rect((0, 0), (380, 130)),
+            relative_rect=pygame.Rect((5, 5), (370, 120)),
             manager=self.manager,
             container=self.message_log_panel,
             object_id="#message_log"
@@ -92,16 +92,23 @@ class GameGUI:
 
     def draw_minimap(self, surface, game_map, party):
         """Draw the minimap on the specified surface."""
-        map_surface = self.minimap_panel.image
-        map_surface.fill((0, 0, 0))  # Black background
-
         # Don't draw the minimap if it's collapsed
         if self.minimap_collapsed:
             return
 
+        map_surface = self.minimap_panel.image
+        
+        # Don't fill the entire surface - let the panel's themed background and border show
+        # Only fill the inner area where we'll draw the map
+        border_width = 4  # Account for the panel's border and padding
+        inner_rect = pygame.Rect(border_width, border_width,
+                                map_surface.get_width() - (border_width * 2),
+                                map_surface.get_height() - 40 - (border_width * 2))  # leave space for compass
+        pygame.draw.rect(map_surface, (15, 15, 15), inner_rect)  # Dark background for map area
+
         cell_size = 10
-        map_width = self.minimap_panel.get_container().get_rect().width
-        map_height = self.minimap_panel.get_container().get_rect().height - 40 # leave space for compass
+        map_width = inner_rect.width
+        map_height = inner_rect.height
 
         # Center the map view on the player
         start_x = max(0, party.x - (map_width // (2 * cell_size)))
@@ -112,16 +119,16 @@ class GameGUI:
         for y in range(start_y, end_y):
             for x in range(start_x, end_x):
                 if 0 <= x < game_map.width and 0 <= y < game_map.height:
-                    screen_x = (x - start_x) * cell_size
-                    screen_y = (y - start_y) * cell_size
+                    screen_x = inner_rect.x + (x - start_x) * cell_size
+                    screen_y = inner_rect.y + (y - start_y) * cell_size
                     if game_map.tiles[y][x] == 1:
                         pygame.draw.rect(map_surface, (100, 100, 100), (screen_x, screen_y, cell_size, cell_size))
                     else:
                         pygame.draw.rect(map_surface, (50, 50, 50), (screen_x, screen_y, cell_size, cell_size))
 
         # Draw player position
-        player_screen_x = (party.x - start_x) * cell_size
-        player_screen_y = (party.y - start_y) * cell_size
+        player_screen_x = inner_rect.x + (party.x - start_x) * cell_size
+        player_screen_y = inner_rect.y + (party.y - start_y) * cell_size
         pygame.draw.rect(map_surface, (255, 0, 0), (player_screen_x, player_screen_y, cell_size, cell_size))
 
     def create_party_frames(self, party):
@@ -200,11 +207,15 @@ class GameGUI:
         self.message_log_collapsed = not self.message_log_collapsed
         if self.message_log_collapsed:
             self.message_log_panel.set_dimensions((400, 60))
-            self.message_log.set_dimensions((380, 40))
+            self.message_log.set_dimensions((370, 35))
+            self.message_log.scroll_bar_width = 0
+            self.message_log.rebuild()
             self.message_log_collapse_button.set_text('+')
         else:
             self.message_log_panel.set_dimensions((400, 150))
-            self.message_log.set_dimensions((380, 130))
+            self.message_log.set_dimensions((370, 120))
+            self.message_log.scroll_bar_width = 20
+            self.message_log.rebuild()
             self.message_log_collapse_button.set_text('-')
 
     def toggle_minimap(self):
