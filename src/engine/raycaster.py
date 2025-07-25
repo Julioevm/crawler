@@ -7,12 +7,13 @@ import math
 import pygame
 
 class Raycaster:
-    def __init__(self, screen_width, screen_height, map_data, texture_manager=None):
+    def __init__(self, screen_width, screen_height, game_map, texture_manager=None):
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.map_data = map_data
-        self.map_width = len(map_data[0])
-        self.map_height = len(map_data)
+        self.game_map = game_map
+        self.map_data = game_map.tiles
+        self.map_width = len(self.map_data[0])
+        self.map_height = len(self.map_data)
         self.texture_manager = texture_manager
         
         # Player properties (center of the grid cell)
@@ -54,6 +55,9 @@ class Raycaster:
         # Render floor and ceiling first
         self.render_floor_and_ceiling(screen)
         
+        # Z-buffer for sprite rendering
+        z_buffer = [float('inf')] * self.screen_width
+        
         # Calculate the virtual camera position, offset from the player's actual position
         offset = 0.5  # Render from half a tile behind the player
         cam_x = self.player_x - offset * math.cos(self.player_angle)
@@ -72,6 +76,7 @@ class Raycaster:
             
             # Correct for fisheye effect
             distance *= math.cos(ray_angle - self.player_angle)
+            z_buffer[x] = distance
             
             # Calculate wall height based on the distance to the projection plane.
             # This ensures the projection is geometrically correct.
@@ -115,6 +120,8 @@ class Raycaster:
             else:
                 # Draw empty space (don't draw anything)
                 pass
+        
+        self.render_sprites(screen, z_buffer)
         
     def render_floor_and_ceiling(self, screen):
         """Render textured floor and ceiling using raycasting technique"""
@@ -201,3 +208,52 @@ class Raycaster:
             hit_y = map_y if ray_dir_y > 0 else map_y + 1
             
         return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side
+
+    def render_sprites(self, screen, z_buffer):
+        """Render sprites (enemies, items, etc.)"""
+        entities = self.game_map.entities
+        
+        entities.sort(key=lambda e: ((self.player_x - e.x)**2 + (self.player_y - e.y)**2), reverse=True)
+        
+        for entity in entities:
+            if entity.sprite and self.texture_manager.get_sprite(entity.sprite):
+                sprite = self.texture_manager.get_sprite(entity.sprite)
+                
+                sprite_x = (entity.x + 0.5) - self.player_x
+                sprite_y = (entity.y + 0.5) - self.player_y
+                
+                # transform_x is depth, transform_y is horizontal position on camera plane
+                depth = math.cos(self.player_angle) * sprite_x + math.sin(self.player_angle) * sprite_y
+                horizontal_pos = -math.sin(self.player_angle) * sprite_x + math.cos(self.player_angle) * sprite_y
+                
+                # Sprite is in front of player
+                if depth > 0.5: # Use a threshold to avoid clipping
+                    # Project sprite to screen
+                    sprite_screen_x = int((self.screen_width / 2) * (1 + horizontal_pos / depth))
+                    
+                    # Calculate sprite height and width. Use projection_plane_dist for correct scaling.
+                    sprite_height = abs(int(self.projection_plane_dist / depth))
+                    # Maintain aspect ratio
+                    aspect_ratio = sprite.get_width() / sprite.get_height() if sprite.get_height() > 0 else 1
+                    sprite_width = int(sprite_height * aspect_ratio)
+                    
+                    # Calculate drawing boundaries on screen
+                    draw_start_y = self.screen_height // 2 - sprite_height // 2
+                    draw_end_y = self.screen_height // 2 + sprite_height // 2
+                    draw_start_x = sprite_screen_x - sprite_width // 2
+                    draw_end_x = sprite_screen_x + sprite_width // 2
+                    
+                    # Draw the sprite column by column
+                    for stripe in range(draw_start_x, draw_end_x):
+                        # Check if stripe is on screen and in front of a wall
+                        if 0 <= stripe < self.screen_width and depth < z_buffer[stripe]:
+                            # Calculate texture x coordinate
+                            tex_x = int((stripe - draw_start_x) * sprite.get_width() / sprite_width) if sprite_width > 0 else 0
+                            
+                            if 0 <= tex_x < sprite.get_width():
+                                # Get the column of the texture
+                                tex_column = sprite.subsurface(tex_x, 0, 1, sprite.get_height())
+                                # Scale it to the correct height
+                                scaled_column = pygame.transform.scale(tex_column, (1, sprite_height))
+                                # Draw the column
+                                screen.blit(scaled_column, (stripe, draw_start_y))

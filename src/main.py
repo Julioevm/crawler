@@ -70,13 +70,13 @@ def main():
     player.equip_weapon(sword)
     
     # Create some enemies
-    enemy1 = Enemy(3, 3, "Goblin", 30, 8, 2)
+    enemy1 = Enemy(3, 3, "Goblin", 30, 8, 2, sprite="goblin")
     enemy2 = Enemy(5, 5, "Orc", 50, 12, 5)
     game_map.add_entity(enemy1)
     game_map.add_entity(enemy2)
     
     # Create the raycaster
-    raycaster = Raycaster(screen_width, screen_height, map_data, texture_manager)
+    raycaster = Raycaster(screen_width, screen_height, game_map, texture_manager)
     raycaster.set_player_position(player.x, player.y)
     raycaster.set_player_angle(player.angle)
     

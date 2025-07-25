@@ -11,6 +11,7 @@ class TextureManager:
     def __init__(self, assets_path="assets"):
         self.assets_path = assets_path
         self.textures = {}
+        self.sprites = {}
         
     def load_texture(self, name, file_path=None):
         """Load a texture from a file or create a colored texture for testing."""
@@ -41,9 +42,26 @@ class TextureManager:
         self.textures[name] = texture
         return texture
         
+    def load_sprite(self, name, file_path):
+        """Load a sprite from a file."""
+        print(f"Loading sprite '{name}' from {file_path}", flush=True)
+        if os.path.exists(file_path):
+            print(f"File exists: {file_path}", flush=True)
+            try:
+                sprite = pygame.image.load(file_path).convert_alpha()
+                self.sprites[name] = sprite
+                return sprite
+            except pygame.error:
+                print(f"Failed to load sprite: {file_path}")
+        return None
+
     def get_texture(self, name):
         """Get a texture by name."""
         return self.textures.get(name)
+        
+    def get_sprite(self, name):
+        """Get a sprite by name."""
+        return self.sprites.get(name)
         
     def create_default_textures(self):
         """Create default textures for walls."""
@@ -53,6 +71,9 @@ class TextureManager:
         self.load_texture("wall_green", os.path.join(self.assets_path, "textures", "wall_green.png"))
         self.load_texture("wall_blue", os.path.join(self.assets_path, "textures", "wall_blue.png"))
         self.load_texture("wall_gray", os.path.join(self.assets_path, "textures", "wall_gray.png"))
+        
+        # Load sprites
+        self.load_sprite("goblin", os.path.join(self.assets_path, "sprites", "goblin.png"))
         
         # Also create some simple colored textures as fallbacks
         if "dungeon_wall" not in self.textures:

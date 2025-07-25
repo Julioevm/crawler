@@ -8,8 +8,8 @@ from entities.ai import BasicAI
 class Enemy(Entity):
     """Basic enemy entity."""
     
-    def __init__(self, x, y, name, hp, attack, defense):
-        super().__init__(x, y, 'E', name, f"A {name} lurking in the dungeon")
+    def __init__(self, x, y, name, hp, attack, defense, sprite=None):
+        super().__init__(x, y, 'E', name, f"A {name} lurking in the dungeon", sprite=sprite)
         self.hp = hp
         self.max_hp = hp
         self.attack = attack
