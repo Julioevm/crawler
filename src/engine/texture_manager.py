@@ -14,6 +14,20 @@ class TextureManager:
         self.textures = {}
         self.sprites = {}
         self.texture_arrays = {}
+        self.portraits = {}
+
+    def load_portrait(self, name, file_path):
+        """Load a portrait from a file."""
+        if not os.path.exists(file_path):
+            print(f"Portrait file not found: {file_path}")
+            return None
+        try:
+            portrait = pygame.image.load(file_path).convert_alpha()
+            self.portraits[name] = portrait
+            return portrait
+        except pygame.error as e:
+            print(f"Failed to load portrait: {file_path} - {e}")
+            return None
 
     def load_texture(self, name, file_path):
         """Load a texture from a file."""
@@ -55,6 +69,10 @@ class TextureManager:
     def get_sprite(self, name):
         """Get a sprite by name."""
         return self.sprites.get(name)
+
+    def get_portrait(self, name):
+        """Get a portrait by name."""
+        return self.portraits.get(name)
         
     def create_default_textures(self):
         """Create default textures for walls."""

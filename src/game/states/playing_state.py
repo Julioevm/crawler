@@ -37,7 +37,7 @@ class PlayingState(BaseState):
 
         self.combat_ui = CombatUI(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.minimap_ui = MinimapUI(SCREEN_WIDTH, SCREEN_HEIGHT, self.game_map.width, self.game_map.height)
-        self.game_gui = GameGUI()
+        self.game_gui = GameGUI(self.texture_manager)
 
         self.messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory", "Press 'TAB' to show minimap"]
         self.game_map.update_light_map()
@@ -64,7 +64,8 @@ class PlayingState(BaseState):
                 character_data["hp"],
                 character_data["mp"],
                 character_data["attack"],
-                character_data["defense"]
+                character_data["defense"],
+                character_data.get("portrait")
             )
             for item_data in character_data.get("items", []):
                 if item_data["type"] == "potion":

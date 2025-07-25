@@ -6,6 +6,7 @@
             "mp": 50,
             "attack": 10,
             "defense": 5,
+            "portrait": "male_human.png",
             "items": [
                 {
                     "type": "weapon",
@@ -27,6 +28,7 @@
             "mp": 80,
             "attack": 5,
             "defense": 3,
+            "portrait": "female_elf.png",
             "items": [
                 {
                     "type": "weapon",

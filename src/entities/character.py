@@ -7,7 +7,7 @@ from entities.entity import Entity
 class Character(Entity):
     """A character in the party."""
     
-    def __init__(self, name, hp, mp, attack, defense):
+    def __init__(self, name, hp, mp, attack, defense, portrait=None):
         super().__init__(0, 0, '', name, "A character in the party")
         self.name = name
         self.hp = hp
@@ -20,6 +20,7 @@ class Character(Entity):
         self.attack = attack
         self.defense = defense
         self.equipped_weapon = None
+        self.portrait = portrait
         
     def take_damage(self, amount):
         """Reduce character HP by amount."""

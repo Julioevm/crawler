@@ -1,13 +1,15 @@
 import pygame
 import pygame_gui
+import os
 
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class GameGUI:
     """Manages the game's GUI using pygame-gui."""
 
-    def __init__(self):
+    def __init__(self, texture_manager):
         self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.texture_manager = texture_manager
 
         # Message Log Panel
         self.message_log_panel = pygame_gui.elements.UIPanel(
@@ -129,10 +131,16 @@ class GameGUI:
                 object_id=f"#char_panel_{i}"
             )
 
-            # Placeholder for portrait
+            portrait_surface = pygame.Surface((64, 64))
+            if character.portrait:
+                portrait_path = os.path.join(self.texture_manager.assets_path, "portraits", character.portrait)
+                portrait_image = self.texture_manager.load_portrait(character.portrait, portrait_path)
+                if portrait_image:
+                    portrait_surface = portrait_image
+
             portrait = pygame_gui.elements.UIImage(
                 relative_rect=pygame.Rect((10, 10), (64, 64)),
-                image_surface=pygame.Surface((64, 64)), # Placeholder surface
+                image_surface=portrait_surface,
                 manager=self.manager,
                 container=char_panel
             )
