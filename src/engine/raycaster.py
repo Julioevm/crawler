@@ -279,9 +279,15 @@ class Raycaster:
                                 
                                 # Apply lighting
                                 light_level = self.game_map.light_map[int(entity.y)][int(entity.x)]
-                                darkness = pygame.Surface(scaled_column.get_size()).convert_alpha()
-                                darkness.fill((0, 0, 0, 255 * (1 - light_level)))
                                 
+                                # Create a copy to avoid modifying the original texture column
+                                lit_column = scaled_column.copy()
+                                
+                                # Create a lighting color
+                                light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
+                                
+                                # Apply lighting only to non-transparent pixels using multiplicative blending
+                                lit_column.fill(light_color, special_flags=pygame.BLEND_MULT)
+
                                 # Draw the column
-                                screen.blit(scaled_column, (stripe, draw_start_y))
-                                screen.blit(darkness, (stripe, draw_start_y))
+                                screen.blit(lit_column, (stripe, draw_start_y))
