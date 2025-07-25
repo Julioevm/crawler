@@ -13,7 +13,8 @@ class TextureManager:
         self.assets_path = assets_path
         self.textures = {}
         self.sprites = {}
-        
+        self.texture_arrays = {}
+
     def load_texture(self, name, file_path=None):
         """Load a texture from a file or create a colored texture for testing."""
         if file_path and os.path.exists(file_path):
@@ -21,10 +22,11 @@ class TextureManager:
                 texture = pygame.image.load(file_path).convert()
                 texture = pygame.transform.scale(texture, (TEXTURE_SIZE, TEXTURE_SIZE))
                 self.textures[name] = texture
+                self.texture_arrays[name] = pygame.surfarray.array3d(texture)
                 return texture
             except pygame.error:
                 print(f"Failed to load texture: {file_path}")
-        
+
         # Fallback to creating a simple colored texture
         # In a real game, you would have actual texture files
         texture = pygame.Surface((TEXTURE_SIZE, TEXTURE_SIZE))
@@ -44,10 +46,11 @@ class TextureManager:
             texture.fill((40, 40, 40))  # Dark grey for the ceiling
         else:
             texture.fill((200, 200, 200))  # Default light gray
-            
+
         self.textures[name] = texture
+        self.texture_arrays[name] = pygame.surfarray.array3d(texture)
         return texture
-        
+
     def load_sprite(self, name, file_path):
         """Load a sprite from a file."""
         print(f"Loading sprite '{name}' from {file_path}", flush=True)
@@ -64,7 +67,11 @@ class TextureManager:
     def get_texture(self, name):
         """Get a texture by name."""
         return self.textures.get(name)
-        
+
+    def get_texture_array(self, name):
+        """Get a texture as a numpy array by name."""
+        return self.texture_arrays.get(name)
+
     def get_sprite(self, name):
         """Get a sprite by name."""
         return self.sprites.get(name)

@@ -5,12 +5,14 @@ Based on the technique used in Wolfenstein 3D.
 
 import math
 import pygame
+import numpy as np
 from config.constants import TEXTURE_SIZE
 
 class Raycaster:
     def __init__(self, screen_width, screen_height, game_map, texture_manager=None):
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.floor_buffer = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
         self.game_map = game_map
         self.map_data = game_map.tiles
         self.map_width = len(self.map_data[0])
@@ -138,78 +140,97 @@ class Raycaster:
         self.render_sprites(screen, z_buffer)
         
     def render_floor_and_ceiling(self, screen):
-        """Render textured floor and ceiling using raycasting technique"""
-        floor_texture = self.texture_manager.get_texture("dungeon_floor")
-        ceil_texture = self.texture_manager.get_texture("dungeon_ceil")
+        """Render textured floor and ceiling using numpy for performance."""
+        floor_texture_arr = self.texture_manager.get_texture_array("dungeon_floor")
+        ceil_texture_arr = self.texture_manager.get_texture_array("dungeon_ceil")
 
-        # Fallback colors
-        floor_color = (50, 50, 50)
-        ceiling_color = (40, 40, 40)
+        # Pre-calculate angles
+        angle_cos = math.cos(self.player_angle)
+        angle_sin = math.sin(self.player_angle)
+        fov_half = self.fov / 2
+        
+        # Ray directions for the leftmost and rightmost columns
+        ray_dir_x0 = angle_cos * math.cos(-fov_half) - angle_sin * math.sin(-fov_half)
+        ray_dir_y0 = angle_sin * math.cos(-fov_half) + angle_cos * math.sin(-fov_half)
+        ray_dir_x1 = angle_cos * math.cos(fov_half) - angle_sin * math.sin(fov_half)
+        ray_dir_y1 = angle_sin * math.cos(fov_half) + angle_cos * math.sin(fov_half)
 
-        # Render floor and ceiling
-        for y in range(self.screen_height):
-            is_floor = y > self.screen_height / 2
-            
-            if is_floor:
-                p = y - self.screen_height // 2
-                texture = floor_texture
-                fallback_color = floor_color
-            else:
-                p = self.screen_height // 2 - y
-                texture = ceil_texture
-                fallback_color = ceiling_color
+        # Create arrays for y values for floor and ceiling
+        y_floor = np.arange(self.screen_height // 2, self.screen_height)
+        y_ceil = np.arange(self.screen_height // 2)
 
-            # Ray direction for the leftmost and rightmost ray
-            # Ray direction for the leftmost and rightmost ray
-            ray_dir_x0 = math.cos(self.player_angle - self.fov / 2)
-            ray_dir_y0 = math.sin(self.player_angle - self.fov / 2)
-            ray_dir_x1 = math.cos(self.player_angle + self.fov / 2)
-            ray_dir_y1 = math.sin(self.player_angle + self.fov / 2)
+        # Calculate row distances
+        p_floor = y_floor - self.screen_height / 2
+        p_ceil = self.screen_height / 2 - y_ceil
+        
+        # Avoid division by zero
+        p_floor[p_floor == 0] = 1
+        p_ceil[p_ceil == 0] = 1
 
-            if p == 0:
-                # Avoid division by zero
-                screen.set_at((0, y), (0,0,0)) # Should not happen often
-                continue
+        row_distance_floor = (0.5 * self.screen_height) / p_floor
+        row_distance_ceil = (0.5 * self.screen_height) / p_ceil
 
-            # Vertical position of the camera.
-            pos_z = 0.5 * self.screen_height
+        # Calculate step vectors for floor and ceiling
+        step_x_floor = row_distance_floor[:, np.newaxis] * (ray_dir_x1 - ray_dir_x0) / self.screen_width
+        step_y_floor = row_distance_floor[:, np.newaxis] * (ray_dir_y1 - ray_dir_y0) / self.screen_width
+        step_x_ceil = row_distance_ceil[:, np.newaxis] * (ray_dir_x1 - ray_dir_x0) / self.screen_width
+        step_y_ceil = row_distance_ceil[:, np.newaxis] * (ray_dir_y1 - ray_dir_y0) / self.screen_width
 
-            # Horizontal distance from the camera to the floor for the current row.
-            row_distance = pos_z / p
+        # Calculate texture world coordinates for floor and ceiling
+        tex_world_x_floor = self.player_x + row_distance_floor[:, np.newaxis] * ray_dir_x0
+        tex_world_y_floor = self.player_y + row_distance_floor[:, np.newaxis] * ray_dir_y0
+        tex_world_x_ceil = self.player_x + row_distance_ceil[:, np.newaxis] * ray_dir_x0
+        tex_world_y_ceil = self.player_y + row_distance_ceil[:, np.newaxis] * ray_dir_y0
 
-            # Calculate the real world step vector we have to add for each x (parallel to camera plane)
-            step_x = row_distance * (ray_dir_x1 - ray_dir_x0) / self.screen_width
-            step_y = row_distance * (ray_dir_y1 - ray_dir_y0) / self.screen_width
+        # Generate x-coordinates for stepping
+        x_coords = np.arange(self.screen_width)
 
-            # Real world coordinates of the leftmost column. This will be updated as we step to the right.
-            tex_world_x = self.player_x + row_distance * ray_dir_x0
-            tex_world_y = self.player_y + row_distance * ray_dir_y0
+        # Calculate full texture coordinates for floor and ceiling
+        full_tex_x_floor = tex_world_x_floor + x_coords * step_x_floor
+        full_tex_y_floor = tex_world_y_floor + x_coords * step_y_floor
+        full_tex_x_ceil = tex_world_x_ceil + x_coords * step_x_ceil
+        full_tex_y_ceil = tex_world_y_ceil + x_coords * step_y_ceil
 
-            for x in range(self.screen_width):
-                # The cell coord is simply got from the integer parts of tex_world_x and tex_world_y
-                cell_x = int(tex_world_x)
-                cell_y = int(tex_world_y)
+        # Get cell coordinates
+        cell_x_floor = full_tex_x_floor.astype(int)
+        cell_y_floor = full_tex_y_floor.astype(int)
+        cell_x_ceil = full_tex_x_ceil.astype(int)
+        cell_y_ceil = full_tex_y_ceil.astype(int)
 
-                # Get the texture coordinate from the fractional part
-                tx = int(self.tex_width * (tex_world_x - cell_x)) & (self.tex_width - 1)
-                ty = int(self.tex_height * (tex_world_y - cell_y)) & (self.tex_height - 1)
+        # Get texture coordinates
+        tx_floor = (self.tex_width * (full_tex_x_floor - cell_x_floor)).astype(int) & (self.tex_width - 1)
+        ty_floor = (self.tex_height * (full_tex_y_floor - cell_y_floor)).astype(int) & (self.tex_height - 1)
+        tx_ceil = (self.tex_width * (full_tex_x_ceil - cell_x_ceil)).astype(int) & (self.tex_width - 1)
+        ty_ceil = (self.tex_height * (full_tex_y_ceil - cell_y_ceil)).astype(int) & (self.tex_height - 1)
 
-                tex_world_x += step_x
-                tex_world_y += step_y
+        # Get colors from textures
+        floor_colors = floor_texture_arr[ty_floor, tx_floor]
+        ceil_colors = ceil_texture_arr[ty_ceil, tx_ceil]
 
-                # Get the color from the texture or use fallback
-                if texture:
-                    color = texture.get_at((tx, ty))
-                else:
-                    color = fallback_color
+        # Apply lighting
+        light_map_arr = np.array(self.game_map.light_map)
+        
+        # Create masks for valid coordinates
+        floor_mask = (cell_x_floor >= 0) & (cell_x_floor < self.map_width) & (cell_y_floor >= 0) & (cell_y_floor < self.map_height)
+        ceil_mask = (cell_x_ceil >= 0) & (cell_x_ceil < self.map_width) & (cell_y_ceil >= 0) & (cell_y_ceil < self.map_height)
 
-                # Apply lighting
-                if 0 <= cell_x < self.map_width and 0 <= cell_y < self.map_height:
-                    light_level = self.game_map.light_map[cell_y][cell_x]
-                    color = (int(color[0] * light_level), int(color[1] * light_level), int(color[2] * light_level))
-                
-                # Draw the pixel
-                screen.set_at((x, y), color)
+        # Get light levels, using ambient light as a fallback
+        light_levels_floor = np.full(floor_mask.shape, self.game_map.ambient_light)
+        light_levels_ceil = np.full(ceil_mask.shape, self.game_map.ambient_light)
+        
+        light_levels_floor[floor_mask] = light_map_arr[cell_y_floor[floor_mask], cell_x_floor[floor_mask]]
+        light_levels_ceil[ceil_mask] = light_map_arr[cell_y_ceil[ceil_mask], cell_x_ceil[ceil_mask]]
+
+        # Apply lighting to colors
+        floor_colors = (floor_colors * light_levels_floor[:, :, np.newaxis]).astype(np.uint8)
+        ceil_colors = (ceil_colors * light_levels_ceil[:, :, np.newaxis]).astype(np.uint8)
+
+        # Fill the buffer
+        self.floor_buffer[self.screen_height // 2:, :, :] = floor_colors
+        self.floor_buffer[:self.screen_height // 2, :, :] = ceil_colors
+
+        # Blit the buffer to the screen, transposing the array to match screen dimensions
+        pygame.surfarray.blit_array(screen, self.floor_buffer.transpose(1, 0, 2))
     
     def cast_single_ray(self, ray_angle, player_x, player_y):
         """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
