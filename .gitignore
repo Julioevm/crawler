@@ -3,3 +3,4 @@
 .env
 .roo/
 QWEN.md
+base_assets/*
