@@ -5,6 +5,7 @@ Based on the technique used in Wolfenstein 3D.
 
 import math
 import pygame
+from config.constants import TEXTURE_SIZE
 
 class Raycaster:
     def __init__(self, screen_width, screen_height, game_map, texture_manager=None):
@@ -32,8 +33,8 @@ class Raycaster:
         }
         
         # Texture size
-        self.tex_width = 64
-        self.tex_height = 64
+        self.tex_width = TEXTURE_SIZE
+        self.tex_height = TEXTURE_SIZE
         
         # Create default textures if no texture manager provided
         if not self.texture_manager:

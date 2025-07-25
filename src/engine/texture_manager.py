@@ -4,6 +4,7 @@ Texture manager for loading and managing textures.
 
 import pygame
 import os
+from config.constants import TEXTURE_SIZE
 
 class TextureManager:
     """Manages loading and storing textures for the game."""
@@ -18,6 +19,7 @@ class TextureManager:
         if file_path and os.path.exists(file_path):
             try:
                 texture = pygame.image.load(file_path).convert()
+                texture = pygame.transform.scale(texture, (TEXTURE_SIZE, TEXTURE_SIZE))
                 self.textures[name] = texture
                 return texture
             except pygame.error:
@@ -25,7 +27,7 @@ class TextureManager:
         
         # Fallback to creating a simple colored texture
         # In a real game, you would have actual texture files
-        texture = pygame.Surface((64, 64))
+        texture = pygame.Surface((TEXTURE_SIZE, TEXTURE_SIZE))
         if name == "wall_red":
             texture.fill((180, 60, 60))
         elif name == "wall_green":
