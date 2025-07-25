@@ -38,6 +38,8 @@ class TextureManager:
             texture.fill((120, 120, 120))
         elif name == "dungeon_wall":
             texture.fill((100, 100, 110))  # Default dungeon wall color
+        elif name == "dungeon_floor":
+            texture.fill((50, 50, 50))  # Dark grey for the floor
         else:
             texture.fill((200, 200, 200))  # Default light gray
             
@@ -73,6 +75,7 @@ class TextureManager:
         self.load_texture("wall_green", os.path.join(self.assets_path, "textures", "wall_green.png"))
         self.load_texture("wall_blue", os.path.join(self.assets_path, "textures", "wall_blue.png"))
         self.load_texture("wall_gray", os.path.join(self.assets_path, "textures", "wall_gray.png"))
+        self.load_texture("dungeon_floor", os.path.join(self.assets_path, "textures", "dungeon_floor.png"))
         
         # Load sprites
         self.load_sprite("goblin", os.path.join(self.assets_path, "sprites", "goblin.png"))
@@ -89,3 +92,5 @@ class TextureManager:
             self.load_texture("wall_blue")
         if "wall_gray" not in self.textures:
             self.load_texture("wall_gray")
+        if "dungeon_floor" not in self.textures:
+            self.load_texture("dungeon_floor")
