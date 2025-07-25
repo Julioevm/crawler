@@ -91,6 +91,10 @@ class GameGUI:
         map_surface = self.minimap_panel.image
         map_surface.fill((0, 0, 0))  # Black background
 
+        # Don't draw the minimap if it's collapsed
+        if self.minimap_collapsed:
+            return
+
         cell_size = 10
         map_width = self.minimap_panel.get_container().get_rect().width
         map_height = self.minimap_panel.get_container().get_rect().height - 40 # leave space for compass
@@ -204,9 +208,13 @@ class GameGUI:
         self.minimap_collapsed = not self.minimap_collapsed
         if self.minimap_collapsed:
             self.minimap_panel.set_dimensions((200, 60))
+            # Move compass to be visible in collapsed state
+            self.compass_label.set_relative_position((10, 20))
             self.minimap_collapse_button.set_text('+')
         else:
             self.minimap_panel.set_dimensions((200, 200))
+            # Move compass back to original position
+            self.compass_label.set_relative_position((0, 160))
             self.minimap_collapse_button.set_text('-')
 
     def toggle_party_stats(self):
