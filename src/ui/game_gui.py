@@ -8,7 +8,7 @@ class GameGUI:
     """Manages the game's GUI using pygame-gui."""
 
     def __init__(self, texture_manager):
-        self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), "data/themes/game_gui.json")
         self.texture_manager = texture_manager
 
         # Message Log Panel
@@ -128,10 +128,10 @@ class GameGUI:
                 relative_rect=pygame.Rect((start_x + i * (char_width + spacing), 10), (char_width, 130)),
                 manager=self.manager,
                 container=self.party_panel,
-                object_id=f"#char_panel_{i}"
+                object_id=f"@char_panel"
             )
 
-            portrait_surface = pygame.Surface((64, 64))
+            portrait_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
             if character.portrait:
                 portrait_path = os.path.join(self.texture_manager.assets_path, "portraits", character.portrait)
                 portrait_image = self.texture_manager.load_portrait(character.portrait, portrait_path)
@@ -149,7 +149,8 @@ class GameGUI:
                 relative_rect=pygame.Rect((10, 80), (130, 20)),
                 text=character.name,
                 manager=self.manager,
-                container=char_panel
+                container=char_panel,
+                object_id="@name_label"
             )
 
             hp_bar = pygame_gui.elements.UIStatusBar(
@@ -162,7 +163,8 @@ class GameGUI:
             mp_bar = pygame_gui.elements.UIStatusBar(
                 relative_rect=pygame.Rect((10, 115), (130, 10)),
                 manager=self.manager,
-                container=char_panel
+                container=char_panel,
+                object_id="@mp_bar"
             )
             mp_bar.percent_full = (character.mp / character.max_mp) * 100 if character.max_mp > 0 else 0
 

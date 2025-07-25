@@ -1,0 +1,38 @@
+{
+    "#party_panel": {
+        "colours": {
+            "dark_bg": "#00000000"
+        },
+        "misc": {
+            "border_width": "0"
+        }
+    },
+    "@char_panel": {
+        "colours": {
+            "dark_bg": "#00000000"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "2"
+        }
+    },
+    "@char_panel:hover": {
+        "colours": {
+            "dark_bg": "#00000080"
+        }
+    },
+    "@name_label": {
+        "colours": {
+            "normal_text": "#FFFFFF",
+            "dark_bg": "#00000000"
+        },
+        "misc": {
+            "text_shadow": "1"
+        }
+    },
+    "@mp_bar": {
+        "colours": {
+            "filled_bar": "#0000FF"
+        }
+    }
+}
