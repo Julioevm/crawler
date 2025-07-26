@@ -1,12 +1,14 @@
 import pygame
 import pygame_gui
 import os
-import pathlib
 
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class GameGUI:
     """Manages the game's GUI using pygame-gui."""
+
+    CHAR_PANEL_WIDTH = 150
+    CHAR_PANEL_HEIGHT = 140
 
     def __init__(self, texture_manager):
         self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT),
@@ -33,7 +35,7 @@ class GameGUI:
             container=self.message_log_panel,
             object_id="#message_log"
         )
-        self.message_log_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, -10), (30, 20)), text='-', manager=self.manager, container=self.message_log_panel)
+        self.message_log_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, -5), (30, 20)), text='-', manager=self.manager, container=self.message_log_panel)
         self.message_log_collapsed = False
 
         # Minimap Panel
@@ -50,7 +52,7 @@ class GameGUI:
             container=self.minimap_panel,
             object_id="#compass_label"
         )
-        self.minimap_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((160, -10), (30, 20)), text='-', manager=self.manager, container=self.minimap_panel)
+        self.minimap_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((160, -5), (30, 20)), text='-', manager=self.manager, container=self.minimap_panel)
         self.minimap_collapsed = False
 
         # Party Stats Panel
@@ -59,7 +61,7 @@ class GameGUI:
             manager=self.manager,
             object_id="#party_panel"
         )
-        self.party_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((SCREEN_WIDTH - 40, -10), (30, 20)), text='-', manager=self.manager, container=self.party_panel)
+        self.party_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((SCREEN_WIDTH - 40, -5), (30, 20)), text='-', manager=self.manager, container=self.party_panel)
         self.party_collapsed = False
         self.character_elements = []
 
@@ -141,16 +143,16 @@ class GameGUI:
     def create_party_frames(self, party):
         """Create the UI elements for each character in the party."""
         self.character_elements = []
-        char_width = 150
         spacing = 10
-        start_x = (SCREEN_WIDTH - (len(party.characters) * (char_width + spacing))) // 2
+        start_x = (SCREEN_WIDTH - (len(party.characters) * (self.CHAR_PANEL_WIDTH + spacing))) // 2
 
         for i, character in enumerate(party.characters):
             char_panel = pygame_gui.elements.UIPanel(
-                relative_rect=pygame.Rect((start_x + i * (char_width + spacing), 10), (char_width, 130)),
+                relative_rect=pygame.Rect((start_x + i * (self.CHAR_PANEL_WIDTH + spacing), 10),
+                                          (self.CHAR_PANEL_WIDTH, self.CHAR_PANEL_HEIGHT)),
                 manager=self.manager,
                 container=self.party_panel,
-                object_id=f"@char_panel"
+                object_id="@char_panel"
             )
 
             portrait_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -161,29 +163,31 @@ class GameGUI:
                     portrait_surface = portrait_image
 
             portrait = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect((10, 10), (64, 64)),
+                relative_rect=pygame.Rect((15, 10), (64, 64)),
                 image_surface=portrait_surface,
                 manager=self.manager,
                 container=char_panel
             )
 
             name = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect((10, 80), (130, 20)),
+                relative_rect=pygame.Rect((15, 80), (120, 20)),
                 text=character.name,
                 manager=self.manager,
                 container=char_panel,
                 object_id="@name_label"
             )
 
+            bar_width = 110
+
             hp_bar = pygame_gui.elements.UIStatusBar(
-                relative_rect=pygame.Rect((10, 100), (130, 10)),
+                relative_rect=pygame.Rect((15, 100), (bar_width, 10)),
                 manager=self.manager,
                 container=char_panel
             )
             hp_bar.percent_full = (character.hp / character.max_hp) * 100
 
             mp_bar = pygame_gui.elements.UIStatusBar(
-                relative_rect=pygame.Rect((10, 115), (130, 10)),
+                relative_rect=pygame.Rect((15, 112), (bar_width, 10)),
                 manager=self.manager,
                 container=char_panel,
                 object_id="@mp_bar"
@@ -247,18 +251,18 @@ class GameGUI:
             self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 80))
             for elements in self.character_elements:
                 elements["portrait"].hide()
-                elements["panel"].set_dimensions((150, 70))
+                elements["panel"].set_dimensions((self.CHAR_PANEL_WIDTH, 70))
                 elements["name"].set_relative_position((10, 5))
                 elements["hp_bar"].set_relative_position((10, 25))
-                elements["mp_bar"].set_relative_position((10, 40))
+                elements["mp_bar"].set_relative_position((10, 37))
             self.party_collapse_button.set_text('+')
         else:
             self.party_panel.set_dimensions((SCREEN_WIDTH, 150))
             self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 150))
             for elements in self.character_elements:
                 elements["portrait"].show()
-                elements["panel"].set_dimensions((150, 130))
+                elements["panel"].set_dimensions((self.CHAR_PANEL_WIDTH, self.CHAR_PANEL_HEIGHT))
                 elements["name"].set_relative_position((10, 80))
                 elements["hp_bar"].set_relative_position((10, 100))
-                elements["mp_bar"].set_relative_position((10, 115))
+                elements["mp_bar"].set_relative_position((10, 112))
             self.party_collapse_button.set_text('-')
