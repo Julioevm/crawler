@@ -118,23 +118,27 @@ class PlayingState(BaseState):
     def handle_party_input(self, event):
         moved = False
         dx, dy = 0, 0
+        move_direction = None
+        is_strafe = False
 
         if event.key == K_w or event.key == K_UP:
             dx = math.cos(self.party.angle)
             dy = math.sin(self.party.angle)
-            self.messages.append("You move forward")
+            move_direction = "forward"
         elif event.key == K_s or event.key == K_DOWN:
             dx = -math.cos(self.party.angle)
             dy = -math.sin(self.party.angle)
-            self.messages.append("You move backward")
+            move_direction = "backward"
         elif event.key == K_a:
             dx = math.cos(self.party.angle - math.pi/2)
             dy = math.sin(self.party.angle - math.pi/2)
-            self.messages.append("You strafe left")
+            move_direction = "left"
+            is_strafe = True
         elif event.key == K_d:
             dx = math.cos(self.party.angle + math.pi/2)
             dy = math.sin(self.party.angle + math.pi/2)
-            self.messages.append("You strafe right")
+            move_direction = "right"
+            is_strafe = True
         elif event.key == K_q or event.key == K_LEFT:
             self.party.turn_left()
             moved = True
@@ -147,36 +151,30 @@ class PlayingState(BaseState):
             moved = True
             self.messages.append("You wait for a turn")
 
-        if (dx != 0 or dy != 0):
+        if dx != 0 or dy != 0:
             target_x = int(self.party.x + round(dx))
             target_y = int(self.party.y + round(dy))
 
-            if self.game_map.is_walkable(target_x, target_y):
-                if int(self.party.x) != target_x or int(self.party.y) != target_y:
-                    self.party.x = target_x
-                    self.party.y = target_y
-                    moved = True
-                    self.game_map.update_light_map()
-                else:
-                    self.party.x = target_x
-                    self.party.y = target_y
-                    moved = True
-            
             entities_at_position = self.game_map.get_entities_at(target_x, target_y)
             enemy_group = next((e for e in entities_at_position if isinstance(e, EnemyGroup) and e.is_alive()), None)
 
             if enemy_group:
-                # Initiate combat without moving
                 moved = True
                 new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
                 self.game.push_state(new_state)
                 self.game_map.remove_entity(enemy_group)
-            elif self.game_map.is_walkable(target_x, target_y):
-                # Move to the new tile if it's empty and walkable
+            elif self.game_map.is_walkable(target_x, target_y) and (int(self.party.x) != target_x or int(self.party.y) != target_y):
                 self.party.x = target_x
                 self.party.y = target_y
                 moved = True
                 self.game_map.update_light_map()
+                if is_strafe:
+                    self.messages.append(f"You strafe {move_direction}")
+                else:
+                    self.messages.append(f"You move {move_direction}")
+            else:
+                moved = True
+                self.messages.append("That way is blocked.")
 
         if moved and not self.combat_manager.in_combat:
             self.raycaster.set_party_position(self.party.x, self.party.y)
