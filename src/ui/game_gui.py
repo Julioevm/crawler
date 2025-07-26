@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 import os
+import pathlib
 
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
@@ -8,7 +9,13 @@ class GameGUI:
     """Manages the game's GUI using pygame-gui."""
 
     def __init__(self, texture_manager):
-        self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), "data/themes/game_gui.json")
+        self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT),
+                                            "data/themes/game_gui.json",
+                                            enable_live_theme_updates=False)
+        
+        self.manager.add_font_paths("morris_roman_black_font",
+                                    "assets/fonts/MorrisRoman-Black.ttf")
+
         self.texture_manager = texture_manager
         self._last_messages = []  # Track last messages to avoid unnecessary updates
 

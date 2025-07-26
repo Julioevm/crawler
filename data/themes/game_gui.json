@@ -38,9 +38,10 @@
             "text_shadow_colour": "#000000"
         },
         "font": {
-            "name": "fira_code",
-            "size": "14",
-            "bold": "1"
+            "name": "morris_roman_black_font",
+            "size": "16",
+            "bold": "1",
+            "regular_path": "assets/fonts/MorrisRoman-black.ttf"
         }
     },
     "@mp_bar": {
@@ -79,8 +80,8 @@
             "shape_corner_radius": "4"
         },
         "font": {
-            "name": "fira_code",
-            "size": "12"
+            "name": "morris_roman_black_font",
+            "size": "13"
         }
     },
     "#message_log.vertical_scroll_bar": {
@@ -163,7 +164,7 @@
             "text_shadow_colour": "#000000"
         },
         "font": {
-            "name": "fira_code",
+            "name": "morris_roman_black_font",
             "size": "16",
             "bold": "1"
         }
@@ -190,7 +191,7 @@
             "shape_corner_radius": "6"
         },
         "font": {
-            "name": "fira_code",
+            "name": "morris_roman_black_font",
             "size": "12",
             "bold": "1"
         }
@@ -249,7 +250,7 @@
             "text_shadow_colour": "#000000"
         },
         "font": {
-            "name": "fira_code",
+            "name": "morris_roman_black_font",
             "size": "12"
         }
     }
