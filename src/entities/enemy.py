@@ -8,12 +8,13 @@ from entities.ai import BasicAI
 class Enemy(Entity):
     """Basic enemy entity."""
     
-    def __init__(self, x, y, name, hp, attack, defense, sprite=None):
+    def __init__(self, x, y, name, hp, attack, defense, sprite=None, morale=100):
         super().__init__(x, y, 'E', name, f"A {name} lurking in the dungeon", sprite=sprite)
         self.hp = hp
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
+        self.morale = morale
         self.ai = BasicAI(self)  # Attach the AI component
         
     def take_damage(self, amount):

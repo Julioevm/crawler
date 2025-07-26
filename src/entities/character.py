@@ -3,7 +3,7 @@ Character class.
 """
 
 from entities.entity import Entity
-
+from entities.spell import Spell
 class Character(Entity):
     """A character in the party."""
     
@@ -21,7 +21,24 @@ class Character(Entity):
         self.defense = defense
         self.equipped_weapon = None
         self.portrait = portrait
+        self.spellbook = []
         
+    def learn_spell(self, spell):
+        """Add a spell to the character's spellbook."""
+        self.spellbook.append(spell)
+
+    def cast_spell(self, spell, target):
+        """Cast a spell on a target."""
+        if self.mp >= spell.mp_cost:
+            self.mp -= spell.mp_cost
+            # Apply spell effect
+            if spell.effect["type"] == "damage":
+                target.take_damage(spell.effect["amount"])
+            elif spell.effect["type"] == "heal":
+                target.heal(spell.effect["amount"])
+            return True
+        return False
+
     def take_damage(self, amount):
         """Reduce character HP by amount."""
         self.hp = max(0, self.hp - amount)
@@ -60,3 +77,7 @@ class Character(Entity):
         if self.equipped_weapon:
             attack += self.equipped_weapon.attack_bonus
         return attack
+        
+    def is_alive(self):
+        """Check if the character is still alive."""
+        return self.hp > 0

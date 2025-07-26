@@ -18,9 +18,10 @@
                     "type": "potion",
                     "name": "Health Potion",
                     "description": "Restores 20 HP.",
-                    "value": 20
+                    "heal_amount": 20
                 }
-            ]
+            ],
+            "spellbook": []
         },
         {
             "name": "Elara",
@@ -35,6 +36,27 @@
                     "name": "Staff",
                     "description": "A simple wooden staff.",
                     "attack_bonus": 1
+                }
+            ],
+            "spellbook": [
+                {
+                    "name": "Fireball",
+                    "description": "Hurls a ball of fire at an enemy.",
+                    "mp_cost": 10,
+                    "effect": {
+                        "type": "damage",
+                        "amount": 20
+                    }
+                },
+                {
+                    "name": "Heal",
+                    "description": "Heals an ally.",
+                    "mp_cost": 8,
+                    "effect": {
+                        "type": "heal",
+                        "amount": 15
+                    },
+                    "target_type": "ally"
                 }
             ]
         }

@@ -8,7 +8,9 @@ from engine.texture_manager import TextureManager
 from entities.character import Character
 from game.party import Party
 from entities.enemy import Enemy
+from entities.enemy_group import EnemyGroup
 from entities.potion import Potion
+from entities.spell import Spell
 from entities.weapon import Weapon
 from game.game_map import GameMap
 from game.turn_manager import TurnManager
@@ -69,22 +71,35 @@ class PlayingState(BaseState):
             )
             for item_data in character_data.get("items", []):
                 if item_data["type"] == "potion":
-                    item = Potion(item_data["name"], item_data["description"], item_data["value"])
+                    item = Potion(item_data["name"], item_data["description"], item_data["heal_amount"])
                 elif item_data["type"] == "weapon":
                     item = Weapon(item_data["name"], item_data["description"], item_data["attack_bonus"])
                 self.party.add_to_inventory(item)
                 if isinstance(item, Weapon) and not character.equipped_weapon:
                     character.equip_weapon(item)
+            for spell_data in character_data.get("spellbook", []):
+                spell = Spell(
+                    spell_data["name"],
+                    spell_data["description"],
+                    spell_data["mp_cost"],
+                    spell_data["effect"],
+                    spell_data.get("target_type", "enemy")
+                )
+                character.learn_spell(spell)
             self.party.add_character(character)
 
-        for entity_data in level_data.get("entities", []):
-            if entity_data["type"] == "enemy":
+        for group_data in level_data.get("enemy_groups", []):
+            enemies = []
+            for enemy_data in group_data["enemies"]:
                 enemy = Enemy(
-                    entity_data["x"], entity_data["y"], entity_data["name"],
-                    entity_data["hp"], entity_data["attack"], entity_data["defense"],
-                    entity_data["sprite"]
+                    group_data["x"], group_data["y"], enemy_data["name"],
+                    enemy_data["hp"], enemy_data["attack"], enemy_data["defense"],
+                    enemy_data["sprite"],
+                    enemy_data.get("morale", 100)
                 )
-                self.game_map.add_entity(enemy)
+                enemies.append(enemy)
+            enemy_group = EnemyGroup(group_data["x"], group_data["y"], enemies)
+            self.game_map.add_entity(enemy_group)
 
     def get_event(self, event):
         self.game_gui.process_events(event)
@@ -147,12 +162,21 @@ class PlayingState(BaseState):
                     self.party.y = target_y
                     moved = True
             
-            entities_at_position = self.game_map.get_entities_at(self.party.x, self.party.y)
-            for entity in entities_at_position:
-                if isinstance(entity, Enemy) and entity.is_alive():
-                    new_state = CombatState(self.game, self.party, entity, self.combat_manager)
-                    self.game.push_state(new_state)
-                    break
+            entities_at_position = self.game_map.get_entities_at(target_x, target_y)
+            enemy_group = next((e for e in entities_at_position if isinstance(e, EnemyGroup) and e.is_alive()), None)
+
+            if enemy_group:
+                # Initiate combat without moving
+                moved = True
+                new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
+                self.game.push_state(new_state)
+                self.game_map.remove_entity(enemy_group)
+            elif self.game_map.is_walkable(target_x, target_y):
+                # Move to the new tile if it's empty and walkable
+                self.party.x = target_x
+                self.party.y = target_y
+                moved = True
+                self.game_map.update_light_map()
 
         if moved and not self.combat_manager.in_combat:
             self.raycaster.set_party_position(self.party.x, self.party.y)

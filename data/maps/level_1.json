@@ -17,26 +17,42 @@
     "x": 1,
     "y": 1
   },
-  "entities": [
+  "enemy_groups": [
     {
-      "type": "enemy",
-      "name": "Goblin",
       "x": 3,
       "y": 3,
-      "hp": 30,
-      "attack": 8,
-      "defense": 2,
-      "sprite": "goblin"
+      "enemies": [
+        {
+          "name": "Goblin",
+          "hp": 30,
+          "attack": 8,
+          "defense": 2,
+          "sprite": "goblin",
+          "morale": 80
+        }
+      ]
     },
     {
-      "type": "enemy",
-      "name": "Slime",
       "x": 5,
       "y": 5,
-      "hp": 25,
-      "attack": 3,
-      "defense": 1,
-      "sprite": "slime"
+      "enemies": [
+        {
+          "name": "Slime",
+          "hp": 25,
+          "attack": 3,
+          "defense": 1,
+          "sprite": "slime",
+          "morale": 50
+        },
+        {
+          "name": "Slime",
+          "hp": 25,
+          "attack": 3,
+          "defense": 1,
+          "sprite": "slime",
+          "morale": 50
+        }
+      ]
     }
   ],
   "items": [
