@@ -10,7 +10,7 @@ class GameGUI:
     CHAR_PANEL_WIDTH = 150
     CHAR_PANEL_HEIGHT = 140
 
-    def __init__(self, texture_manager):
+    def __init__(self, texture_manager, show_fps=False):
         self.manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT),
                                             "data/themes/game_gui.json",
                                             enable_live_theme_updates=False)
@@ -20,6 +20,16 @@ class GameGUI:
 
         self.texture_manager = texture_manager
         self._last_messages = []  # Track last messages to avoid unnecessary updates
+
+        if show_fps:
+            self.fps_label = pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((SCREEN_WIDTH // 2 - 50, 0), (100, 30)),
+                text="FPS: 0",
+                manager=self.manager,
+                object_id="#fps_label"
+            )
+        else:
+            self.fps_label = None
 
         # Message Log Panel
         self.message_log_panel = pygame_gui.elements.UIPanel(
@@ -98,6 +108,11 @@ class GameGUI:
         """Update the compass direction."""
         directions = ["N", "E", "S", "W"]
         self.compass_label.set_text(f"- {directions[facing]} -")
+
+    def update_fps(self, fps):
+        """Update the FPS counter."""
+        if self.fps_label:
+            self.fps_label.set_text(f"FPS: {int(fps)}")
 
     def draw_minimap(self, surface, game_map, party):
         """Draw the minimap on the specified surface."""

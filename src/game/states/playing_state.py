@@ -40,7 +40,7 @@ class PlayingState(BaseState):
 
         self.combat_ui = CombatUI(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.minimap_ui = MinimapUI(SCREEN_WIDTH, SCREEN_HEIGHT, self.game_map.width, self.game_map.height)
-        self.game_gui = GameGUI(self.texture_manager)
+        self.game_gui = GameGUI(self.texture_manager, self.game.show_fps)
 
         self.messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory", "Press 'TAB' to show minimap"]
         self.game_map.update_light_map()
@@ -203,7 +203,8 @@ class PlayingState(BaseState):
         if not self.minimap_ui.visible:
             self.raycaster.cast_rays(screen)
         
-        # self.ui.draw_fps(screen, clock.get_fps())
+        if self.game.show_fps:
+            self.game_gui.update_fps(clock.get_fps())
         
         self.minimap_ui.draw(screen, self.game_map, self.party)
         self.game_gui.update_message_log(self.messages)
