@@ -12,7 +12,7 @@ Its turn-based, and the levels are based around a grid of cells.
 
 ## Development
 
-- Avoid using magic numbers, use variables and descriptive names. For reusable contants use the constants.py file.
+- Avoid using magic numbers, use variables and descriptive names. For reusable constants use the constants.py file.
 - Be mindful of changes that might break existing code.
-- Run the project after a change to ensure the game is working. `uv run src\main.py`
-- We use Pygame and Pygame GUI, use these libraries as possible.
+- Run the project after a change to ensure the game is working. `uv run src\main.py` Check the console for any error. Afterwards ask for player confirmation that the implementation was successful.
+- We use Pygame and Pygame GUI, use these libraries as much as possible to avoid re-implementing some of its features.

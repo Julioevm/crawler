@@ -9,6 +9,7 @@ from entities.character import Character
 from game.party import Party
 from entities.enemy import Enemy
 from entities.enemy_group import EnemyGroup
+from entities.door import Door
 from entities.potion import Potion
 from entities.spell import Spell
 from entities.weapon import Weapon
@@ -52,6 +53,11 @@ class PlayingState(BaseState):
         map_data = level_data["map"]
         self.game_map = GameMap(len(map_data[0]), len(map_data))
         self.game_map.tiles = map_data
+
+        for y, row in enumerate(map_data):
+            for x, tile in enumerate(row):
+                if tile == 2:
+                    self.game_map.add_entity(Door(x, y))
 
         player_data = level_data["player"]
         self.party = Party(player_data["x"], player_data["y"])
@@ -155,26 +161,34 @@ class PlayingState(BaseState):
             target_x = int(self.party.x + round(dx))
             target_y = int(self.party.y + round(dy))
 
-            entities_at_position = self.game_map.get_entities_at(target_x, target_y)
-            enemy_group = next((e for e in entities_at_position if isinstance(e, EnemyGroup) and e.is_alive()), None)
-
-            if enemy_group:
-                moved = True
-                new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
-                self.game.push_state(new_state)
-                self.game_map.remove_entity(enemy_group)
-            elif self.game_map.is_walkable(target_x, target_y) and (int(self.party.x) != target_x or int(self.party.y) != target_y):
-                self.party.x = target_x
-                self.party.y = target_y
-                moved = True
-                self.game_map.update_light_map()
-                if is_strafe:
-                    self.messages.append(f"You strafe {move_direction}")
-                else:
-                    self.messages.append(f"You move {move_direction}")
+            # Check for door interaction before other checks
+            if self.game_map.tiles[target_y][target_x] == 2:
+                door = next((e for e in self.game_map.get_entities_at(target_x, target_y) if isinstance(e, Door)), None)
+                if door:
+                    door.interact(self.game_map)
+                    self.messages.append("You open the door.")
+                    moved = True
             else:
-                moved = True
-                self.messages.append("That way is blocked.")
+                entities_at_position = self.game_map.get_entities_at(target_x, target_y)
+                enemy_group = next((e for e in entities_at_position if isinstance(e, EnemyGroup) and e.is_alive()), None)
+
+                if enemy_group:
+                    moved = True
+                    new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
+                    self.game.push_state(new_state)
+                    self.game_map.remove_entity(enemy_group)
+                elif self.game_map.is_walkable(target_x, target_y) and (int(self.party.x) != target_x or int(self.party.y) != target_y):
+                    self.party.x = target_x
+                    self.party.y = target_y
+                    moved = True
+                    self.game_map.update_light_map()
+                    if is_strafe:
+                        self.messages.append(f"You strafe {move_direction}")
+                    else:
+                        self.messages.append(f"You move {move_direction}")
+                else:
+                    moved = True
+                    self.messages.append("That way is blocked.")
 
         if moved and not self.combat_manager.in_combat:
             self.raycaster.set_party_position(self.party.x, self.party.y)

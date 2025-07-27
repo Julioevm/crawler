@@ -15,6 +15,7 @@ class Raycaster:
         self.floor_buffer = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
         self.game_map = game_map
         self.map_data = game_map.tiles
+        self.transparent_tiles = {3} # Tile IDs that the raycaster can see through
         self.map_width = len(self.map_data[0])
         self.map_height = len(self.map_data)
         self.texture_manager = texture_manager
@@ -72,58 +73,57 @@ class Raycaster:
             ray_angle = ray_angle % (2 * math.pi)
             
             # Cast the ray from the virtual camera position
-            distance, wall_type, hit_x, hit_y, side, map_x, map_y = self.cast_single_ray(ray_angle, cam_x, cam_y)
+            wall_hits = self.cast_single_ray(ray_angle, cam_x, cam_y)
             
-            # Correct for fisheye effect
-            distance *= math.cos(ray_angle - self.party_angle)
-            z_buffer[x] = distance
-            
-            # Calculate wall height based on the distance to the projection plane.
-            # This ensures the projection is geometrically correct.
-            wall_height = max(1, (self.projection_plane_dist / distance)) if distance > 0 else self.screen_height
-            
-            # Use dungeon wall texture for all walls
-            texture = self.texture_manager.get_texture("dungeon_wall")
-            
-            # Draw textured wall slice if texture is available
-            if wall_type > 0 and texture:
-                # Calculate wall position - centered between ceiling and floor
-                wall_top = (self.screen_height - wall_height) // 2
-                wall_bottom = wall_top + wall_height
-                
-                # Calculate texture coordinate based on which side was hit
-                # side = 0 means x-side (east/west wall faces)
-                # side = 1 means y-side (north/south wall faces)
-                if side == 0:  # Hit east/west wall face (use Y coordinate for texture)
-                    tex_coord = hit_y - math.floor(hit_y) if hit_y is not None else 0
-                else:  # Hit north/south wall face (use X coordinate for texture)
-                    tex_coord = hit_x - math.floor(hit_x) if hit_x is not None else 0
+            # Draw walls from back to front
+            solid_wall_dist = float('inf')
+            for distance, wall_type, hit_x, hit_y, side, map_x, map_y in sorted(wall_hits, key=lambda x: x[0], reverse=True):
+                # Correct for fisheye effect
+                corrected_dist = distance * math.cos(ray_angle - self.party_angle)
+
+                # Find the closest solid wall for the z-buffer
+                if wall_type not in self.transparent_tiles:
+                    solid_wall_dist = min(solid_wall_dist, corrected_dist)
+
+                # Calculate wall height based on the distance to the projection plane.
+                wall_height = max(1, (self.projection_plane_dist / corrected_dist)) if corrected_dist > 0 else self.screen_height
+
+                # Determine texture based on wall type
+                if wall_type == 1:
+                    texture = self.texture_manager.get_texture("dungeon_wall")
+                elif wall_type == 2:
+                    texture = self.texture_manager.get_texture("dungeon_door_closed")
+                elif wall_type == 3:
+                    texture = self.texture_manager.get_texture("dungeon_door_open")
+                else:
+                    texture = None
+
+                if texture:
+                    wall_top = (self.screen_height - wall_height) // 2
                     
-                # Map to texture pixel coordinate
-                tex_x = int(tex_coord * (self.tex_width - 1))
-                
-                # Ensure tex_x is within bounds
-                tex_x = max(0, min(self.tex_width - 1, tex_x))
-                
-                # Extract a single column from the texture
-                tex_column = texture.subsurface((tex_x, 0, 1, self.tex_height))
-                
-                # Scale the texture column to match the wall height
-                scaled_column = pygame.transform.scale(tex_column, (1, int(wall_height)))
-                
-                # Apply lighting more efficiently
-                light_level = self.game_map.light_map[map_y][map_x]
-                light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
-                
-                # Create a copy to avoid modifying the original texture column
-                lit_column = scaled_column.copy()
-                lit_column.fill(light_color, special_flags=pygame.BLEND_MULT)
-                
-                screen.blit(lit_column, (x, wall_top))
-                
-            else:
-                # Draw empty space (don't draw anything)
-                pass
+                    if side == 0:
+                        tex_coord = hit_y - math.floor(hit_y) if hit_y is not None else 0
+                    else:
+                        tex_coord = hit_x - math.floor(hit_x) if hit_x is not None else 0
+                    
+                    tex_x = int(tex_coord * (self.tex_width - 1))
+                    tex_x = max(0, min(self.tex_width - 1, tex_x))
+                    
+                    tex_column = texture.subsurface((tex_x, 0, 1, self.tex_height))
+                    scaled_column = pygame.transform.scale(tex_column, (1, int(wall_height)))
+
+                    # Blit the scaled texture column directly to preserve transparency
+                    screen.blit(scaled_column, (x, wall_top))
+
+                    # Apply lighting by blitting a colored surface on top with a multiply blend
+                    light_level = self.game_map.light_map[map_y][map_x]
+                    if light_level < 1.0:
+                        light_color = (int(255 * light_level), int(255 * light_level), int(255 * light_level))
+                        light_surface = pygame.Surface((1, int(wall_height)), pygame.SRCALPHA)
+                        light_surface.fill(light_color)
+                        screen.blit(light_surface, (x, wall_top), special_flags=pygame.BLEND_MULT)
+            
+            z_buffer[x] = solid_wall_dist
         
         self.render_sprites(screen, z_buffer)
         
@@ -221,70 +221,63 @@ class Raycaster:
         pygame.surfarray.blit_array(screen, self.floor_buffer.transpose(1, 0, 2))
     
     def cast_single_ray(self, ray_angle, party_x, party_y):
-        """Cast a single ray and return the distance to the first wall hit, the wall type, and hit coordinates"""
-        # Ray direction
+        """
+        Cast a single ray and return a list of all walls hit, including transparent ones.
+        """
         ray_dir_x = math.cos(ray_angle)
         ray_dir_y = math.sin(ray_angle)
-        
-        # Party's map position
-        map_x = int(party_x)
-        map_y = int(party_y)
-        
-        # Length of ray from current position to next x or y-side
+        map_x, map_y = int(party_x), int(party_y)
         delta_dist_x = abs(1 / ray_dir_x) if ray_dir_x != 0 else float('inf')
         delta_dist_y = abs(1 / ray_dir_y) if ray_dir_y != 0 else float('inf')
-        
-        # Direction to step in x or y direction (either +1 or -1)
         step_x = 1 if ray_dir_x >= 0 else -1
         step_y = 1 if ray_dir_y >= 0 else -1
-        
-        # Length of ray from one side to next in map
+
         if ray_dir_x < 0:
             side_dist_x = (party_x - map_x) * delta_dist_x
         else:
             side_dist_x = (map_x + 1.0 - party_x) * delta_dist_x
-            
         if ray_dir_y < 0:
             side_dist_y = (party_y - map_y) * delta_dist_y
         else:
             side_dist_y = (map_y + 1.0 - party_y) * delta_dist_y
-        
-        # Perform DDA (Digital Differential Analysis)
-        hit = False
-        side = 0  # 0 for x-side, 1 for y-side
-        
-        while not hit:
-            # Jump to next map square, either in x-direction, or in y-direction
-            if side_dist_x < side_dist_y:
+
+        hits = []
+        max_dist = 20  # Maximum distance to cast rays
+
+        while True:
+            side = 0 if side_dist_x < side_dist_y else 1
+            if side == 0:
+                dist = side_dist_x
                 side_dist_x += delta_dist_x
                 map_x += step_x
-                side = 0
             else:
+                dist = side_dist_y
                 side_dist_y += delta_dist_y
                 map_y += step_y
-                side = 1
-                
-            # Check if ray has hit a wall
-            if 0 <= map_x < self.map_width and 0 <= map_y < self.map_height:
-                if self.map_data[map_y][map_x] > 0:
-                    hit = True
-            else:
-                # Ray went outside the map
+
+            if dist > max_dist:
                 break
+
+            if 0 <= map_x < self.map_width and 0 <= map_y < self.map_height:
+                wall_type = self.map_data[map_y][map_x]
+                if wall_type > 0:
+                    if side == 0:
+                        perp_wall_dist = (map_x - party_x + (1 - step_x) / 2) / ray_dir_x
+                        hit_y = party_y + perp_wall_dist * ray_dir_y
+                        hit_x = map_x + 0.5
+                    else:
+                        perp_wall_dist = (map_y - party_y + (1 - step_y) / 2) / ray_dir_y
+                        hit_x = party_x + perp_wall_dist * ray_dir_x
+                        hit_y = map_y + 0.5
+                    
+                    hits.append((perp_wall_dist, wall_type, hit_x, hit_y, side, map_x, map_y))
+
+                    if wall_type not in self.transparent_tiles:
+                        break # Hit a solid wall, stop casting
+            else:
+                break # Ray went out of bounds
         
-        # Calculate distance projected on camera direction
-        if side == 0:
-            perp_wall_dist = (map_x - party_x + (1 - step_x) / 2) / ray_dir_x
-            # Calculate exact hit position
-            hit_y = party_y + perp_wall_dist * ray_dir_y
-            hit_x = map_x if ray_dir_x > 0 else map_x + 1
-        else:
-            perp_wall_dist = (map_y - party_y + (1 - step_y) / 2) / ray_dir_y
-            # Calculate exact hit position
-            hit_x = party_x + perp_wall_dist * ray_dir_x
-            hit_y = map_y if ray_dir_y > 0 else map_y + 1
-            
-        return perp_wall_dist, self.map_data[map_y][map_x] if hit else 0, hit_x, hit_y, side, map_x, map_y
+        return hits
 
     def render_sprites(self, screen, z_buffer):
         """Render sprites (enemies, items, etc.)"""

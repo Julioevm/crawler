@@ -20,7 +20,8 @@ class GameMap:
             return False
             
         # Check if it's a wall
-        if self.tiles[y][x] != 0:
+        walkable_tiles = [0, 3]  # 0: floor, 3: open door
+        if self.tiles[y][x] not in walkable_tiles:
             return False
             
         # Check for blocking entities

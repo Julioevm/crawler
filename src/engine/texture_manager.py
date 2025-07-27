@@ -36,7 +36,7 @@ class TextureManager:
             return None
             
         try:
-            texture = pygame.image.load(file_path).convert()
+            texture = pygame.image.load(file_path).convert_alpha()
             texture = pygame.transform.scale(texture, (TEXTURE_SIZE, TEXTURE_SIZE))
             self.textures[name] = texture
             self.texture_arrays[name] = pygame.surfarray.array3d(texture)
@@ -80,6 +80,8 @@ class TextureManager:
         self.load_texture("dungeon_wall", os.path.join(self.assets_path, "textures", "dungeon_wall.png"))
         self.load_texture("dungeon_floor", os.path.join(self.assets_path, "textures", "dungeon_floor.png"))
         self.load_texture("dungeon_ceil", os.path.join(self.assets_path, "textures", "dungeon_ceil.png"))
+        self.load_texture("dungeon_door_closed", os.path.join(self.assets_path, "textures", "dungeon_door_closed.png"))
+        self.load_texture("dungeon_door_open", os.path.join(self.assets_path, "textures", "dungeon_door_open.png"))
         
         # Load sprites
         self.load_sprite("goblin", os.path.join(self.assets_path, "sprites", "goblin.png"))
