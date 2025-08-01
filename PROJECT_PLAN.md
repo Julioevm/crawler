@@ -38,19 +38,21 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [x] Add ceiling rendering
 - [x] Add lighting and shading effects
 - [x] Optimize raycasting performance
+- [x] Add interactive doors
 
 ## Game World Features
+- [ ] Wall decals 
 - [ ] Design multiple dungeon levels
 - [ ] Implement level loading system
-- [ ] Add doors and interactive elements
-- [ ] Create different room types (treasure rooms, monster lairs, etc.)
-- [ ] Add environmental storytelling elements
+- [ ] Add decorations
+- [ ] Traps
+- [ ] Locked Doors
 
 ## Player Features
 - [ ] Create player character class with stats (HP, MP, etc.)
 - [ ] Implement equipment system (weapons, armor)
 - [ ] Create character progression (leveling, skill points)
-- [ ] Add spell casting system
+- [ ] Flesh spell casting system
 
 ## Combat System (Turn-Based)
 - [ ] Create enemy AI with different behaviors
@@ -59,8 +61,10 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 
 ## UI Features
 - [ ] Create main menu
-- [ ] Design HUD for health, mana, etc.
+- [ ] Design proper HUD
+- [ ] Improve minimap
 - [ ] Implement inventory screen
+- [ ] Improve map screen
 - [ ] Create character sheet
 - [ ] Add spell book interface
 - [ ] Design combat UI
@@ -72,13 +76,11 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 
 ## Polish and Extras
 - [ ] Add save/load game functionality
-- [ ] Implement minimap
 - [ ] Add particle effects
 - [ ] Create loading screens
-- [ ] Add tutorials or help system
-- [ ] Implement difficulty settings
+- [ ] Implement difficulty settings (Iron man mode, disable auto-map)
 
 ## Future Enhancements
-- [ ] Create map editor
+- [ ] Create in-game map drawing.
 - [ ] Add modding support
 - [ ] Implement procedural dungeon generation

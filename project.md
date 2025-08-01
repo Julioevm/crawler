@@ -6,17 +6,35 @@ This project is a single player, first person dungeon crawler. Like Classic game
 
 Its turn-based, and the levels are based around a grid of cells.
 
-The player controls a party of characters.
+The player controls a party of up to 6 characters.
 
 Enemies encountered patrolling the dungeons might be alone or a group of multiple enemies.
 
+
+## Game World
+
 There will be chests, traps and other interactive elements in the map.
+
+The player can encounter doors, doors locked by keys or mechanical doors that need to be open from somewhere else in the dungeon.
+
+Maps are inter-connected in non linear ways. Shortcuts can be unlocked. 
+
+There will be multiple themes for the maps.
+
+There will be certain safe areas where you can trade, rest and resurrect party members.
+
+### Characters
+
+WIP
 
 ### Combat
 
 Each turn your party trades blows with the enemies in the opposing party.
 
-WIP
+The party members can attack, cast spells (or use abilities), use items from the inventory or guard (increase defense and take no further action.)
+
+Additionally you might attempt to flee, succeeding will avoid the current battle, failing will lose your turn.
+
 
 ### Inventory
 
@@ -24,19 +42,3 @@ The whole party shares a common inventory.
 Each character in the party can equip or use equipment separately.
 
 
-## Setup
-
-- We use UV to handle python versions and dependencies.
-- Start the 'venv' before installing pip dependencies or running the main python script.
-
-## Development
-
-We use Pygame Community Edition and Pygame GUI for the game rendering, Input, etc. and GUI rendering respectively.
-
-- Avoid using magic numbers, use variables and descriptive names.
-- Be mindful of changes that might break existing code.
-- Run the project after a change to ensure the game is working.
-
-### Debug
-
-- Run with `--fps` argument to see the FPS counter in-game.
