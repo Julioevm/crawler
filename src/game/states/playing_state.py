@@ -1,6 +1,5 @@
 import math
 import json
-from pygame.locals import *
 
 from .base_state import BaseState
 from engine.raycaster import Raycaster
@@ -22,12 +21,14 @@ from ui.game_gui import GameGUI
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from .inventory_state import InventoryState
 from .combat_state import CombatState
+from pygame import KEYDOWN, K_w, K_a, K_s, K_d, K_q, K_e, K_i, K_SPACE, K_TAB, K_UP, K_DOWN, K_LEFT, K_RIGHT
 
 class PlayingState(BaseState):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.texture_manager = TextureManager()
+        self.texture_manager = self.game.texture_manager
+        self.game_gui = self.game.game_gui
         self.texture_manager.create_default_textures()
         self.load_level("data/maps/level_1.json")
 
@@ -38,9 +39,7 @@ class PlayingState(BaseState):
         self.turn_manager = TurnManager(self.game_map)
         self.combat_manager = CombatManager()
 
-        self.combat_ui = CombatUI(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.minimap_ui = MinimapUI(SCREEN_WIDTH, SCREEN_HEIGHT, self.game_map.width, self.game_map.height)
-        self.game_gui = GameGUI(self.texture_manager, self.game.show_fps)
 
         self.messages = ["Welcome to Crawler!", "WASD: Move/Strafe, QE/Arrow Keys: Turn", "Press 'I' to open inventory", "Press 'TAB' to show minimap"]
         self.game_map.update_light_map()
@@ -108,7 +107,6 @@ class PlayingState(BaseState):
             self.game_map.add_entity(enemy_group)
 
     def get_event(self, event):
-        self.game_gui.process_events(event)
         if event.type == KEYDOWN:
             if self.minimap_ui.handle_input(event):
                 return
@@ -197,7 +195,7 @@ class PlayingState(BaseState):
             self.waiting_for_input = True
 
     def update(self, time_delta):
-        self.game_gui.update(time_delta)
+        pass
 
     def draw(self, screen, clock):
         if not self.minimap_ui.visible:
@@ -211,4 +209,4 @@ class PlayingState(BaseState):
         self.game_gui.update_compass(self.party.facing)
         self.game_gui.draw_minimap(screen, self.game_map, self.party)
         self.game_gui.update_party_stats(self.party)
-        self.game_gui.draw(screen)
+        pass

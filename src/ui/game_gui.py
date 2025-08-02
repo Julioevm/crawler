@@ -3,6 +3,7 @@ import pygame_gui
 import os
 
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from ui.combat_ui import CombatUI
 
 class GameGUI:
     """Manages the game's GUI using pygame-gui."""
@@ -19,6 +20,7 @@ class GameGUI:
                                     "assets/fonts/MorrisRoman-Black.ttf")
 
         self.texture_manager = texture_manager
+        self.combat_ui = CombatUI(self.manager, self.texture_manager)
         self._last_messages = []  # Track last messages to avoid unnecessary updates
 
         if show_fps:
@@ -85,10 +87,17 @@ class GameGUI:
                 self.toggle_minimap()
             elif event.ui_element == self.party_collapse_button:
                 self.toggle_party_stats()
+        
+        # Forward events to combat UI if it's visible
+        if self.combat_ui.visible:
+            return self.combat_ui.handle_event(event)
+        return None
 
     def update(self, time_delta):
         """Update the GUI."""
         self.manager.update(time_delta)
+        if self.combat_ui.visible:
+            self.combat_ui.update(time_delta)
 
     def draw(self, screen):
         """Draw the GUI."""
@@ -227,6 +236,16 @@ class GameGUI:
                 elements = self.character_elements[i]
                 elements["hp_bar"].percent_full = (character.hp / character.max_hp) * 100
                 elements["mp_bar"].percent_full = (character.mp / character.max_mp) * 100 if character.max_mp > 0 else 0
+
+    def show_damage_on_party_member(self, character_index, damage):
+        """Display damage on a party member's portrait."""
+        if character_index < len(self.character_elements):
+            elements = self.character_elements[character_index]
+            portrait_rect = elements["portrait"].get_abs_rect()
+            x = portrait_rect.centerx
+            y = portrait_rect.centery
+            self.combat_ui.particle_manager.create_damage_text(x, y, str(damage), self.combat_ui.font)
+            self.combat_ui.particle_manager.create_blood_splatter(x, y)
 
     def toggle_message_log(self):
         """Toggle the visibility of the message log."""

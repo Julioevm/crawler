@@ -51,7 +51,7 @@ class CombatManager:
             self.combatants.remove(target)
             self.enemies.remove(target)
         
-        return target_dead
+        return target_dead, damage
 
     def enemy_attack(self, attacker, party):
         """Process an enemy's attack on a random party member."""
@@ -60,11 +60,11 @@ class CombatManager:
             self.combat_log.append(f"{attacker.name} has fled the battle!")
             self.combatants.remove(attacker)
             self.enemies.remove(attacker)
-            return
+            return None, None, 0
 
         target = random.choice(party.characters)
         damage = max(1, attacker.attack - target.defense + random.randint(-2, 2))
-        target.take_damage(damage)
+        target_dead = target.take_damage(damage)
         
         self.combat_log.append(f"{attacker.name} hits {target.name} for {damage} damage!")
         
@@ -74,6 +74,8 @@ class CombatManager:
             for enemy in self.enemies:
                 if enemy is not attacker:
                     enemy.morale -= 10
+        
+        return target, target_dead, damage
 
     def check_combat_end(self):
         """Check if combat should end."""

@@ -2,6 +2,8 @@ import pygame
 import sys
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from game.states.playing_state import PlayingState
+from ui.game_gui import GameGUI
+from engine.texture_manager import TextureManager
 
 class Game:
     """
@@ -20,6 +22,10 @@ class Game:
         self.running = True
         self.states = []
         self.show_fps = show_fps
+
+        self.texture_manager = TextureManager()
+        self.game_gui = GameGUI(self.texture_manager, self.show_fps)
+
         self.load_states()
 
     def load_states(self):
@@ -51,8 +57,16 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            
+            # Pass events to the GUI manager
+            self.game_gui.process_events(event)
+
             if self.states:
-                self.states[-1].get_event(event)
+                action = self.states[-1].get_event(event)
+                if action:
+                    # If the state returns an action, handle it
+                    # This part might need more logic later
+                    pass
 
     def update(self, time_delta):
         """
@@ -64,8 +78,8 @@ class Game:
                 self.running = False
             elif self.states[-1].done:
                 self.pop_state()
-                if self.states:
-                    self.states[-1].startup(self.states[-1].persist)
+        
+        self.game_gui.update(time_delta)
 
 
     def draw(self):
@@ -73,8 +87,11 @@ class Game:
         Draws the screen based on the current game state.
         """
         self.screen.fill((0, 0, 0))
-        for state in self.states:
-            state.draw(self.screen, self.clock)
+        if self.states:
+            self.states[-1].draw(self.screen, self.clock)
+        
+        self.game_gui.draw(self.screen)
+        self.game_gui.combat_ui.draw(self.screen)
         pygame.display.flip()
 
     def cleanup(self):

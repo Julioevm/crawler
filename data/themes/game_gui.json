@@ -253,5 +253,25 @@
             "name": "morris_roman_black_font",
             "size": "12"
         }
+    },
+    "#enemy_container": {
+        "colours": {
+            "dark_bg": "#00000000",
+            "normal_border": "#00000000"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
+    },
+    "#action_button_container": {
+        "colours": {
+            "dark_bg": "#00000000",
+            "normal_border": "#00000000"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
     }
 }
