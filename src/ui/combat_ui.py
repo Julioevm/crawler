@@ -1,7 +1,3 @@
-"""
-Combat UI for displaying and managing combat interactions.
-"""
-
 import pygame
 import pygame_gui
 import os

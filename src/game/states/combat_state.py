@@ -1,4 +1,3 @@
-import pygame
 from .base_state import BaseState
 
 class CombatState(BaseState):
@@ -45,9 +44,9 @@ class CombatState(BaseState):
                 spell = action_result.get("spell")
                 target = action_result.get("target")
                 if attacker.cast_spell(spell, target):
-                    self.combat_manager.combat_log.append(f"{attacker.name} casts {spell.name} on {target.name}!")
+                    self.game.game_gui.add_message(f"{attacker.name} casts {spell.name} on {target.name}!")
                 else:
-                    self.combat_manager.combat_log.append(f"{attacker.name} failed to cast {spell.name}!")
+                    self.game.game_gui.add_message(f"{attacker.name} failed to cast {spell.name}!")
                 self.next_turn()
             elif action == "item":
                 item = action_result.get("item")
@@ -57,7 +56,7 @@ class CombatState(BaseState):
                 if "potion" in item.name.lower():
                     target.heal(item.heal_amount)
                     self.party.remove_from_inventory(item)
-                    self.combat_manager.combat_log.append(f"{target.name} uses a {item.name} and heals for {item.heal_amount} HP.")
+                    self.game.game_gui.add_message(f"{target.name} uses a {item.name} and heals for {item.heal_amount} HP.")
                 self.next_turn()
             elif action == "guard":
                 # Implement guard logic
