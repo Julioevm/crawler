@@ -42,6 +42,10 @@ class ParticleManager:
     def __init__(self):
         self.particles = []
 
+    def clear(self):
+        """Remove all particles."""
+        self.particles = []
+
     def update(self):
         """Update all active particles."""
         self.particles = [p for p in self.particles if p.lifespan > 0]

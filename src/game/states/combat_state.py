@@ -105,7 +105,7 @@ class CombatState(BaseState):
         elif result == "defeat":
             self.quit = True
         self.done = True
-        self.combat_ui.hide()
+        self.combat_ui.end_combat()
 
     def draw(self, screen, clock):
         # Draw the underlying playing state

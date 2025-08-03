@@ -32,6 +32,11 @@ class CombatUI:
         self.visible = False
         self.party = None
         self.enemies = []
+        self.particle_manager.clear()
+        if hasattr(self, 'action_panel'):
+            self.action_panel.hide()
+            for elem in self.enemy_elements:
+                elem["panel"].hide()
 
     def handle_event(self, event):
         """Handle input events for combat."""
@@ -72,6 +77,10 @@ class CombatUI:
 
     def build(self):
         """Build the combat UI elements."""
+        if hasattr(self, 'action_panel'):
+            self.action_panel.kill()
+        self.action_buttons = []
+        
         panel_width = 600
         panel_height = 60
         panel_x = (SCREEN_WIDTH - panel_width) // 2
