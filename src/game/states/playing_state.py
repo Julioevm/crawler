@@ -208,6 +208,7 @@ class PlayingState(BaseState):
                             self.party.add_to_inventory(item)
                         self.game_gui.add_message(f"You found {len(items)} items in the chest.")
                         chest.items = []
+                        self.game_map.remove_entity(chest)
                     else:
                         self.game_gui.add_message(items)
                     moved = True

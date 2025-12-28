@@ -30,11 +30,13 @@ class LootState(BaseState):
                         self.party.add_to_inventory(item)
                         self.container.remove_item(item)
                         if not self.container.items:
+                            self.game.playing_state.game_map.remove_entity(self.container)
                             self.done = True
                     elif "take_all" in result:
                         for item in self.container.items:
                             self.party.add_to_inventory(item)
                         self.container.items = []
+                        self.game.playing_state.game_map.remove_entity(self.container)
                         self.done = True
 
     def draw(self, surface, clock):
