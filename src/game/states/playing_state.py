@@ -11,6 +11,8 @@ from entities.door import Door
 from entities.potion import Potion
 from entities.spell import Spell
 from entities.weapon import Weapon
+from entities.chest import Chest
+from entities.item_pile import ItemPile
 from game.game_map import GameMap
 from game.turn_manager import TurnManager
 from game.combat_manager import CombatManager
@@ -19,6 +21,7 @@ from ui.minimap_ui import MinimapUI
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from .inventory_state import InventoryState
 from .combat_state import CombatState
+from .loot_state import LootState
 from pygame import KEYDOWN, K_w, K_a, K_s, K_d, K_q, K_e, K_i, K_SPACE, K_TAB, K_UP, K_DOWN, K_LEFT, K_RIGHT
 
 class PlayingState(BaseState):
@@ -107,7 +110,27 @@ class PlayingState(BaseState):
             enemy_group = EnemyGroup(group_data["x"], group_data["y"], enemies)
             self.game_map.add_entity(enemy_group)
 
+        for entity_data in level_data.get("entities", []):
+            entity_type = entity_data.get("type")
+            x = entity_data.get("x")
+            y = entity_data.get("y")
+            
+            if entity_type == "chest":
+                chest = Chest(x, y,
+                              items=entity_data.get("items", []),
+                              trapped=entity_data.get("trapped", False),
+                              locked=entity_data.get("locked", False))
+                self.game_map.add_entity(chest)
+            elif entity_type == "item_pile":
+                item_pile = ItemPile(x, y, items=entity_data.get("items", []))
+                self.game_map.add_entity(item_pile)
+
     def get_event(self, event):
+        action = self.game_gui.process_events(event)
+        if action and "interaction" in action:
+            self.handle_interaction(action["interaction"])
+            return
+
         if event.type == KEYDOWN:
             if self.minimap_ui.handle_input(event):
                 return
@@ -160,12 +183,35 @@ class PlayingState(BaseState):
             else:
                 entities_at_position = self.game_map.get_entities_at(target_x, target_y)
                 enemy_group = next((e for e in entities_at_position if isinstance(e, EnemyGroup) and e.is_alive()), None)
+                chest = next((e for e in entities_at_position if isinstance(e, Chest)), None)
+                item_pile = next((e for e in entities_at_position if isinstance(e, ItemPile)), None)
 
                 if enemy_group:
                     moved = True
                     new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
                     self.game.push_state(new_state)
                     self.game_map.remove_entity(enemy_group)
+                elif chest:
+                    # For now, just open the chest and take the items
+                    # We will add a proper UI later
+                    items = chest.interact(self.party)
+                    if isinstance(items, list):
+                        for item in items:
+                            self.party.add_to_inventory(item)
+                        self.game_gui.add_message(f"You found {len(items)} items in the chest.")
+                        chest.items = []
+                    else:
+                        self.game_gui.add_message(items)
+                    moved = True
+                elif item_pile:
+                    # For now, just take the items
+                    # We will add a proper UI later
+                    items = item_pile.interact(self.party)
+                    for item in items:
+                        self.party.add_to_inventory(item)
+                    self.game_gui.add_message(f"You found {len(items)} items on the ground.")
+                    self.game_map.remove_entity(item_pile)
+                    moved = True
                 elif self.game_map.is_walkable(target_x, target_y) and (int(self.party.x) != target_x or int(self.party.y) != target_y):
                     self.party.x = target_x
                     self.party.y = target_y
@@ -182,7 +228,69 @@ class PlayingState(BaseState):
             self.waiting_for_input = True
 
     def update(self, time_delta):
-        pass
+        # Check for entities in front of the player
+        target_x = int(self.party.x + math.cos(self.party.angle))
+        target_y = int(self.party.y + math.sin(self.party.angle))
+        entities_in_front = self.game_map.get_entities_at(target_x, target_y)
+        
+        # Check for entities at the player's feet
+        entities_at_feet = self.game_map.get_entities_at(int(self.party.x), int(self.party.y))
+
+        interaction_entity = None
+        for entity in entities_in_front:
+            if isinstance(entity, Chest):
+                interaction_entity = entity
+                break
+        
+        if not interaction_entity:
+            for entity in entities_at_feet:
+                if isinstance(entity, ItemPile):
+                    interaction_entity = entity
+                    break
+
+        if interaction_entity:
+            self.game_gui.show_interaction_buttons(interaction_entity)
+        else:
+            self.game_gui.hide_interaction_buttons()
+
+    def handle_interaction(self, action):
+        target_x = int(self.party.x + math.cos(self.party.angle))
+        target_y = int(self.party.y + math.sin(self.party.angle))
+        entities_in_front = self.game_map.get_entities_at(target_x, target_y)
+        entities_at_feet = self.game_map.get_entities_at(int(self.party.x), int(self.party.y))
+
+        entity_to_interact = None
+        for entity in entities_in_front:
+            if isinstance(entity, Chest):
+                entity_to_interact = entity
+                break
+        
+        if not entity_to_interact:
+            for entity in entities_at_feet:
+                if isinstance(entity, ItemPile):
+                    entity_to_interact = entity
+                    break
+        
+        if entity_to_interact:
+            if isinstance(entity_to_interact, Chest):
+                if action == "Open":
+                    items = entity_to_interact.interact(self.party)
+                    if isinstance(items, list):
+                        new_state = LootState(self.game, self.party, entity_to_interact)
+                        self.game.push_state(new_state)
+                    else:
+                        self.game_gui.add_message(items)
+                elif action == "Inspect":
+                    message = entity_to_interact.inspect(self.party)
+                    self.game_gui.add_message(message)
+                elif action == "Disarm":
+                    message = entity_to_interact.disarm(self.party)
+                    self.game_gui.add_message(message)
+            elif isinstance(entity_to_interact, ItemPile):
+                if action == "Loot":
+                    items = entity_to_interact.interact(self.party)
+                    new_state = LootState(self.game, self.party, entity_to_interact)
+                    self.game.push_state(new_state)
 
     def draw(self, screen, clock):
         if not self.minimap_ui.visible:

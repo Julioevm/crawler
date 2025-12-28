@@ -71,24 +71,23 @@
       ]
     }
   ],
-  "items": [
+  "entities": [
     {
-      "type": "potion",
-      "name": "Health Potion",
-      "description": "Restores 20 HP",
-      "value": 20
+      "type": "chest",
+      "x": 1,
+      "y": 5,
+      "items": [
+        { "type": "potion", "name": "Health Potion", "description": "Heals 20 HP.", "heal_amount": 20 },
+        { "type": "weapon", "name": "Rusty Sword", "description": "A basic sword.", "attack_bonus": 2 }
+      ]
     },
     {
-      "type": "potion",
-      "name": "Strength Potion",
-      "description": "Temporarily increases attack",
-      "value": 0
-    },
-    {
-      "type": "weapon",
-      "name": "Iron Sword",
-      "description": "A simple iron sword",
-      "attack_bonus": 5
+      "type": "item_pile",
+      "x": 1,
+      "y": 8,
+      "items": [
+        { "type": "potion", "name": "Mana Potion", "description": "Restores 10 MP.", "heal_amount": 10 }
+      ]
     }
   ]
 }

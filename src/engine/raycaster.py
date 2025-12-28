@@ -7,6 +7,7 @@ import math
 import pygame
 import numpy as np
 from config.constants import TEXTURE_SIZE
+from game.party import Party
 
 class Raycaster:
     def __init__(self, screen_width, screen_height, game_map, texture_manager=None):
@@ -281,7 +282,7 @@ class Raycaster:
 
     def render_sprites(self, screen, z_buffer):
         """Render sprites (enemies, items, etc.)"""
-        entities = self.game_map.entities
+        entities = [e for e in self.game_map.entities if not isinstance(e, Party)]
         
         entities.sort(key=lambda e: ((self.party_x - e.x)**2 + (self.party_y - e.y)**2), reverse=True)
         
@@ -308,8 +309,14 @@ class Raycaster:
                     sprite_width = int(sprite_height * aspect_ratio)
                     
                     # Calculate drawing boundaries on screen
-                    draw_start_y = self.screen_height // 2 - sprite_height // 2
-                    draw_end_y = self.screen_height // 2 + sprite_height // 2
+                    if getattr(entity, "render_on_floor", False):
+                        draw_start_y = self.screen_height // 2 + sprite_height // 2 - sprite_height
+                    elif getattr(entity, "render_on_ceiling", False):
+                        draw_start_y = self.screen_height // 2 - sprite_height // 2
+                    else:
+                        draw_start_y = self.screen_height // 2 - sprite_height // 2
+                    
+                    draw_end_y = draw_start_y + sprite_height
                     draw_start_x = sprite_screen_x - sprite_width // 2
                     draw_end_x = sprite_screen_x + sprite_width // 2
                     

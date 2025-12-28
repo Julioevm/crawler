@@ -86,3 +86,5 @@ class TextureManager:
         # Load sprites
         self.load_sprite("goblin", os.path.join(self.assets_path, "sprites", "goblin.png"))
         self.load_sprite("slime", os.path.join(self.assets_path, "sprites", "slime.png"))
+        self.load_sprite("chest", os.path.join(self.assets_path, "sprites", "chest.png"))
+        self.load_sprite("item_pile", os.path.join(self.assets_path, "sprites", "item_pile.png"))

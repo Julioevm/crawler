@@ -4,6 +4,8 @@ import os
 
 from config.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from ui.combat_ui import CombatUI
+from entities.chest import Chest
+from entities.item_pile import ItemPile
 
 class GameGUI:
     """Manages the game's GUI using pygame-gui."""
@@ -78,6 +80,15 @@ class GameGUI:
         self.party_collapsed = False
         self.character_elements = []
 
+        # Interaction Panel
+        self.interaction_panel = pygame_gui.elements.UIPanel(
+            relative_rect=pygame.Rect((SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT - 200), (300, 50)),
+            manager=self.manager,
+            object_id="#interaction_panel",
+            visible=False
+        )
+        self.interaction_buttons = []
+
     def process_events(self, event):
         """Process GUI events."""
         self.manager.process_events(event)
@@ -88,11 +99,15 @@ class GameGUI:
                 self.toggle_minimap()
             elif event.ui_element == self.party_collapse_button:
                 self.toggle_party_stats()
-        
-        # Forward events to combat UI if it's visible
-        if self.combat_ui.visible:
-            return self.combat_ui.handle_event(event)
-        return None
+            else:
+                for button in self.interaction_buttons:
+                    if event.ui_element == button:
+                        return {"interaction": button.text}
+            
+            # Forward events to combat UI if it's visible
+            if self.combat_ui.visible:
+                return self.combat_ui.handle_event(event)
+            return None
 
     def update(self, time_delta):
         """Update the GUI."""
@@ -255,6 +270,37 @@ class GameGUI:
             y = portrait_rect.centery
             self.combat_ui.particle_manager.create_damage_text(x, y, str(damage), self.combat_ui.font)
             self.combat_ui.particle_manager.create_blood_splatter(x, y)
+
+    def show_interaction_buttons(self, entity):
+        """Show interaction buttons for a given entity."""
+        self.hide_interaction_buttons()
+        self.interaction_panel.show()
+        
+        actions = []
+        if isinstance(entity, Chest):
+            actions = ["Open", "Inspect", "Disarm"]
+        elif isinstance(entity, ItemPile):
+            actions = ["Loot"]
+
+        button_width = 80
+        spacing = 10
+        start_x = (300 - (len(actions) * (button_width + spacing))) // 2
+
+        for i, action in enumerate(actions):
+            button = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect((start_x + i * (button_width + spacing), 5), (button_width, 30)),
+                text=action,
+                manager=self.manager,
+                container=self.interaction_panel
+            )
+            self.interaction_buttons.append(button)
+
+    def hide_interaction_buttons(self):
+        """Hide all interaction buttons."""
+        for button in self.interaction_buttons:
+            button.kill()
+        self.interaction_buttons = []
+        self.interaction_panel.hide()
 
     def toggle_message_log(self):
         """Toggle the visibility of the message log."""
