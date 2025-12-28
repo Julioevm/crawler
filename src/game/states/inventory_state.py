@@ -29,5 +29,5 @@ class InventoryState(BaseState):
                     else:
                         self.messages.append("No characters in the party to use the item on.")
 
-    def draw(self, screen, clock):
-        self.inventory_ui.draw(screen, self.player)
+    def draw(self, surface, clock):
+        self.inventory_ui.draw(surface, self.player)

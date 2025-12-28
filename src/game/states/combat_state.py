@@ -107,8 +107,8 @@ class CombatState(BaseState):
         self.done = True
         self.combat_ui.end_combat()
 
-    def draw(self, screen, clock):
+    def draw(self, surface, clock):
         # Draw the underlying playing state
-        self.game.playing_state.draw(screen, clock)
+        self.game.playing_state.draw(surface, clock)
         # The main game loop now handles drawing the GUI,
         # so we don't need to call combat_ui.draw() here.

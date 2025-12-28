@@ -37,5 +37,5 @@ class LootState(BaseState):
                         self.container.items = []
                         self.done = True
 
-    def draw(self, screen, clock):
-        self.loot_ui.draw(screen)
+    def draw(self, surface, clock):
+        self.loot_ui.draw(surface)

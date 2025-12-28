@@ -11,6 +11,7 @@ from entities.door import Door
 from entities.potion import Potion
 from entities.spell import Spell
 from entities.weapon import Weapon
+from entities.item import Item
 from entities.chest import Chest
 from entities.item_pile import ItemPile
 from game.game_map import GameMap
@@ -79,10 +80,7 @@ class PlayingState(BaseState):
                 character_data.get("portrait")
             )
             for item_data in character_data.get("items", []):
-                if item_data["type"] == "potion":
-                    item = Potion(item_data["name"], item_data["description"], item_data["heal_amount"])
-                elif item_data["type"] == "weapon":
-                    item = Weapon(item_data["name"], item_data["description"], item_data["attack_bonus"])
+                item = self._create_item(item_data)
                 self.party.add_to_inventory(item)
                 if isinstance(item, Weapon) and not character.equipped_weapon:
                     character.equip_weapon(item)
@@ -115,15 +113,25 @@ class PlayingState(BaseState):
             x = entity_data.get("x")
             y = entity_data.get("y")
             
+            items = [self._create_item(item_data) for item_data in entity_data.get("items", [])]
+
             if entity_type == "chest":
                 chest = Chest(x, y,
-                              items=entity_data.get("items", []),
-                              trapped=entity_data.get("trapped", False),
-                              locked=entity_data.get("locked", False))
+                               items=items,
+                               trapped=entity_data.get("trapped", False),
+                               locked=entity_data.get("locked", False))
                 self.game_map.add_entity(chest)
             elif entity_type == "item_pile":
-                item_pile = ItemPile(x, y, items=entity_data.get("items", []))
+                item_pile = ItemPile(x, y, items=items)
                 self.game_map.add_entity(item_pile)
+
+    def _create_item(self, item_data):
+        if item_data["type"] == "potion":
+            return Potion(item_data["name"], item_data["description"], item_data["heal_amount"])
+        elif item_data["type"] == "weapon":
+            return Weapon(item_data["name"], item_data["description"], item_data["attack_bonus"])
+        else:
+            return Item(item_data["name"], item_data["description"], item_data.get("type", "misc"))
 
     def get_event(self, event):
         action = self.game_gui.process_events(event)
@@ -292,16 +300,16 @@ class PlayingState(BaseState):
                     new_state = LootState(self.game, self.party, entity_to_interact)
                     self.game.push_state(new_state)
 
-    def draw(self, screen, clock):
+    def draw(self, surface, clock):
         if not self.minimap_ui.visible:
-            self.raycaster.cast_rays(screen)
+            self.raycaster.cast_rays(surface)
         
         if self.game.show_fps:
             self.game_gui.update_fps(clock.get_fps())
         
-        self.minimap_ui.draw(screen, self.game_map, self.party)
+        self.minimap_ui.draw(surface, self.game_map, self.party)
         self.game_gui.update_message_log()
         self.game_gui.update_compass(self.party.facing)
-        self.game_gui.draw_minimap(screen, self.game_map, self.party)
+        self.game_gui.draw_minimap(surface, self.game_map, self.party)
         self.game_gui.update_party_stats(self.party)
         pass
