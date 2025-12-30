@@ -7,7 +7,7 @@ Its turn-based, and the levels are based around a grid of cells.
 
 ## Setup
 
-- We use UV to handle python verions and dependencies.
+- We use UV to handle python versions and dependencies.
 - Start the 'venv' before installing pip dependencies or running the main python script.
 
 ## Development
