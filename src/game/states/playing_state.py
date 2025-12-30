@@ -134,12 +134,12 @@ class PlayingState(BaseState):
             return Item(item_data["name"], item_data["description"], item_data.get("type", "misc"))
 
     def get_event(self, event):
-        action = self.game_gui.process_events(event)
-        if action and "interaction" in action:
-            self.handle_interaction(action["interaction"])
+        if self.game_gui.last_action and "interaction" in self.game_gui.last_action:
+            self.handle_interaction(self.game_gui.last_action["interaction"])
             return
 
         if event.type == KEYDOWN:
+
             if self.minimap_ui.handle_input(event):
                 return
 

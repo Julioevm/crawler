@@ -25,8 +25,12 @@ class GameGUI:
         self.combat_ui = CombatUI(self.manager, self.texture_manager)
         self.messages = []
         self._last_messages = []  # Track last messages to avoid unnecessary updates
+        self._last_event_id = None
+        self.last_action = None
 
         if show_fps:
+
+
             self.fps_label = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect((SCREEN_WIDTH // 2 - 50, 0), (100, 30)),
                 text="FPS: 0",
@@ -50,7 +54,7 @@ class GameGUI:
             container=self.message_log_panel,
             object_id="#message_log"
         )
-        self.message_log_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, -5), (30, 20)), text='-', manager=self.manager, container=self.message_log_panel)
+        self.message_log_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, 2), (30, 20)), text='-', manager=self.manager, container=self.message_log_panel)
         self.message_log_collapsed = False
 
         # Minimap Panel
@@ -67,7 +71,7 @@ class GameGUI:
             container=self.minimap_panel,
             object_id="#compass_label"
         )
-        self.minimap_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((160, -5), (30, 20)), text='-', manager=self.manager, container=self.minimap_panel)
+        self.minimap_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((160, 2), (30, 20)), text='-', manager=self.manager, container=self.minimap_panel)
         self.minimap_collapsed = False
 
         # Party Stats Panel
@@ -76,8 +80,9 @@ class GameGUI:
             manager=self.manager,
             object_id="#party_panel"
         )
-        self.party_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((SCREEN_WIDTH - 40, -5), (30, 20)), text='-', manager=self.manager, container=self.party_panel)
+        self.party_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((SCREEN_WIDTH - 40, 2), (30, 20)), text='-', manager=self.manager, container=self.party_panel)
         self.party_collapsed = False
+
         self.character_elements = []
 
         # Interaction Panel
@@ -92,6 +97,14 @@ class GameGUI:
     def process_events(self, event):
         """Process GUI events."""
         self.manager.process_events(event)
+        
+        # Prevent double processing of the same event
+        if id(event) == self._last_event_id:
+            return self.last_action
+        
+        self._last_event_id = id(event)
+        self.last_action = None
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.message_log_collapse_button:
                 self.toggle_message_log()
@@ -102,12 +115,15 @@ class GameGUI:
             else:
                 for button in self.interaction_buttons:
                     if event.ui_element == button:
-                        return {"interaction": button.text}
+                        self.last_action = {"interaction": button.text}
+                        return self.last_action
             
             # Forward events to combat UI if it's visible
             if self.combat_ui.visible:
-                return self.combat_ui.handle_event(event)
-            return None
+                self.last_action = self.combat_ui.handle_event(event)
+                return self.last_action
+        return None
+
 
     def update(self, time_delta):
         """Update the GUI."""
@@ -149,11 +165,12 @@ class GameGUI:
 
     def draw_minimap(self, surface, game_map, party):
         """Draw the minimap on the specified surface."""
-        # Don't draw the minimap if it's collapsed
-        if self.minimap_collapsed:
+        # Don't draw the minimap if it's collapsed or panel not ready
+        if self.minimap_collapsed or not self.minimap_panel.image:
             return
 
         map_surface = self.minimap_panel.image
+
         
         # Don't fill the entire surface - let the panel's themed background and border show
         # Only fill the inner area where we'll draw the map
