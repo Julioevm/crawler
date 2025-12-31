@@ -47,6 +47,8 @@ A first-person dungeon crawler game inspired by classic Wizardry games, using Py
 - [ ] Add decorations
 - [ ] Traps
 - [ ] Locked Doors
+- [X] Chests & Ground Items
+- [ ] Chest traps and disarming
 
 ## Player Features
 - [ ] Create player character class with stats (HP, MP, etc.)
