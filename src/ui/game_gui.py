@@ -54,8 +54,6 @@ class GameGUI:
             container=self.message_log_panel,
             object_id="#message_log"
         )
-        self.message_log_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, 2), (30, 20)), text='-', manager=self.manager, container=self.message_log_panel)
-        self.message_log_collapsed = False
 
         # Minimap Panel
         self.minimap_panel = pygame_gui.elements.UIPanel(
@@ -71,8 +69,6 @@ class GameGUI:
             container=self.minimap_panel,
             object_id="#compass_label"
         )
-        self.minimap_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((160, 2), (30, 20)), text='-', manager=self.manager, container=self.minimap_panel)
-        self.minimap_collapsed = False
 
         # Party Stats Panel
         self.party_panel = pygame_gui.elements.UIPanel(
@@ -80,8 +76,6 @@ class GameGUI:
             manager=self.manager,
             object_id="#party_panel"
         )
-        self.party_collapse_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((SCREEN_WIDTH - 40, 2), (30, 20)), text='-', manager=self.manager, container=self.party_panel)
-        self.party_collapsed = False
 
         self.character_elements = []
 
@@ -106,17 +100,10 @@ class GameGUI:
         self.last_action = None
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.message_log_collapse_button:
-                self.toggle_message_log()
-            elif event.ui_element == self.minimap_collapse_button:
-                self.toggle_minimap()
-            elif event.ui_element == self.party_collapse_button:
-                self.toggle_party_stats()
-            else:
-                for button in self.interaction_buttons:
-                    if event.ui_element == button:
-                        self.last_action = {"interaction": button.text}
-                        return self.last_action
+            for button in self.interaction_buttons:
+                if event.ui_element == button:
+                    self.last_action = {"interaction": button.text}
+                    return self.last_action
             
             # Forward events to combat UI if it's visible
             if self.combat_ui.visible:
@@ -165,8 +152,8 @@ class GameGUI:
 
     def draw_minimap(self, surface, game_map, party):
         """Draw the minimap on the specified surface."""
-        # Don't draw the minimap if it's collapsed or panel not ready
-        if self.minimap_collapsed or not self.minimap_panel.image:
+        # Don't draw the minimap if panel not ready
+        if not self.minimap_panel.image:
             return
 
         map_surface = self.minimap_panel.image
@@ -319,56 +306,3 @@ class GameGUI:
         self.interaction_buttons = []
         self.interaction_panel.hide()
 
-    def toggle_message_log(self):
-        """Toggle the visibility of the message log."""
-        self.message_log_collapsed = not self.message_log_collapsed
-        if self.message_log_collapsed:
-            self.message_log_panel.set_dimensions((400, 60))
-            self.message_log.set_dimensions((370, 35))
-            self.message_log.scroll_bar_width = 0
-            self.message_log.rebuild()
-            self.message_log_collapse_button.set_text('+')
-        else:
-            self.message_log_panel.set_dimensions((400, 150))
-            self.message_log.set_dimensions((370, 120))
-            self.message_log.scroll_bar_width = 20
-            self.message_log.rebuild()
-            self.message_log_collapse_button.set_text('-')
-
-    def toggle_minimap(self):
-        """Toggle the visibility of the minimap."""
-        self.minimap_collapsed = not self.minimap_collapsed
-        if self.minimap_collapsed:
-            self.minimap_panel.set_dimensions((200, 60))
-            # Move compass to be visible in collapsed state
-            self.compass_label.set_relative_position((10, 20))
-            self.minimap_collapse_button.set_text('+')
-        else:
-            self.minimap_panel.set_dimensions((200, 200))
-            # Move compass back to original position
-            self.compass_label.set_relative_position((0, 160))
-            self.minimap_collapse_button.set_text('-')
-
-    def toggle_party_stats(self):
-        """Toggle the visibility of the party stats."""
-        self.party_collapsed = not self.party_collapsed
-        if self.party_collapsed:
-            self.party_panel.set_dimensions((SCREEN_WIDTH, 80))
-            self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 80))
-            for elements in self.character_elements:
-                elements["portrait"].hide()
-                elements["panel"].set_dimensions((self.CHAR_PANEL_WIDTH, 70))
-                elements["name"].set_relative_position((10, 5))
-                elements["hp_bar"].set_relative_position((10, 25))
-                elements["mp_bar"].set_relative_position((10, 37))
-            self.party_collapse_button.set_text('+')
-        else:
-            self.party_panel.set_dimensions((SCREEN_WIDTH, 150))
-            self.party_panel.set_relative_position((0, SCREEN_HEIGHT - 150))
-            for elements in self.character_elements:
-                elements["portrait"].show()
-                elements["panel"].set_dimensions((self.CHAR_PANEL_WIDTH, self.CHAR_PANEL_HEIGHT))
-                elements["name"].set_relative_position((10, 80))
-                elements["hp_bar"].set_relative_position((10, 100))
-                elements["mp_bar"].set_relative_position((10, 112))
-            self.party_collapse_button.set_text('-')

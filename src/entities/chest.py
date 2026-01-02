@@ -13,7 +13,7 @@ class Chest(Entity):
         self.trapped = trapped
         self.locked = locked
         self.opened = False
-        self.blocks_movement = False
+        self.blocks_movement = True
         self.render_on_floor = True
 
     def interact(self, party):
