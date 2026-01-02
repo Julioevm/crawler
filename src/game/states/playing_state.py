@@ -199,28 +199,6 @@ class PlayingState(BaseState):
                     new_state = CombatState(self.game, self.party, enemy_group.enemies, self.combat_manager)
                     self.game.push_state(new_state)
                     self.game_map.remove_entity(enemy_group)
-                elif chest:
-                    # For now, just open the chest and take the items
-                    # We will add a proper UI later
-                    items = chest.interact(self.party)
-                    if isinstance(items, list):
-                        for item in items:
-                            self.party.add_to_inventory(item)
-                        self.game_gui.add_message(f"You found {len(items)} items in the chest.")
-                        chest.items = []
-                        self.game_map.remove_entity(chest)
-                    else:
-                        self.game_gui.add_message(items)
-                    moved = True
-                elif item_pile:
-                    # For now, just take the items
-                    # We will add a proper UI later
-                    items = item_pile.interact(self.party)
-                    for item in items:
-                        self.party.add_to_inventory(item)
-                    self.game_gui.add_message(f"You found {len(items)} items on the ground.")
-                    self.game_map.remove_entity(item_pile)
-                    moved = True
                 elif self.game_map.is_walkable(target_x, target_y) and (int(self.party.x) != target_x or int(self.party.y) != target_y):
                     self.party.x = target_x
                     self.party.y = target_y
@@ -247,13 +225,13 @@ class PlayingState(BaseState):
 
         interaction_entity = None
         for entity in entities_in_front:
-            if isinstance(entity, Chest):
+            if isinstance(entity, (Chest, ItemPile)):
                 interaction_entity = entity
                 break
         
         if not interaction_entity:
             for entity in entities_at_feet:
-                if isinstance(entity, ItemPile):
+                if isinstance(entity, (Chest, ItemPile)):
                     interaction_entity = entity
                     break
 
@@ -270,13 +248,13 @@ class PlayingState(BaseState):
 
         entity_to_interact = None
         for entity in entities_in_front:
-            if isinstance(entity, Chest):
+            if isinstance(entity, (Chest, ItemPile)):
                 entity_to_interact = entity
                 break
         
         if not entity_to_interact:
             for entity in entities_at_feet:
-                if isinstance(entity, ItemPile):
+                if isinstance(entity, (Chest, ItemPile)):
                     entity_to_interact = entity
                     break
         
